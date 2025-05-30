@@ -19,6 +19,7 @@
       "Bash(head:*)",
       "Bash(tail:*)",
       "Bash(chmod:*)",
+      "Bash(git commit:*)",
       "mcp__github__create_repository",
       "mcp__tavily__tavily-search"
     ],
