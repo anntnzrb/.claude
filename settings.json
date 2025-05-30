@@ -18,7 +18,9 @@
       "Bash(echo:*)",
       "Bash(head:*)",
       "Bash(tail:*)",
-      "mcp__github__create_repository"
+      "Bash(chmod:*)",
+      "mcp__github__create_repository",
+      "mcp__tavily__tavily-search"
     ],
     "deny": [
       "Bash(grep:*)"
