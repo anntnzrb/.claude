@@ -12,19 +12,20 @@
       "Bash(fd:*)",
       "Bash(rg:*)",
       "Bash(diff:*)",
-      "Bash(git:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
       "Bash(wc:*)",
       "Bash(cat:*)",
       "Bash(echo:*)",
       "Bash(head:*)",
       "Bash(tail:*)",
       "Bash(chmod:*)",
-      "Bash(git commit:*)",
       "mcp__github__create_repository",
       "mcp__tavily__tavily-search"
     ],
     "deny": [
-      "Bash(grep:*)"
+      "Bash(git push:*)"
     ]
   },
   "model": "opus"
