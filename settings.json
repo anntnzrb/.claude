@@ -3,6 +3,7 @@
     "allow": [
       "Bash(pwd:*)",
       "Bash(cd:*)",
+      "Bash(ls:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
       "Bash(rm:*)",
