@@ -1,6 +1,9 @@
 <instructions>
-Exec steps in strict order:
-<step1>Read top-level README.md</step1>
-<step2>Run `git ls-files` to understand the repo structure</step2>
-<step3>Say "Context ingested"</step3>
+<steps exec="parallel">
+1. Run `git ls-files` for repo structure
+2. Read CLAUDE.md if present
+3. Read all README.md
+</steps>
+<final>Say "Context ingested"</final>
 </instructions>
+
