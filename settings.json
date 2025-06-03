@@ -22,6 +22,8 @@
       "Bash(head:*)",
       "Bash(tail:*)",
       "Bash(chmod:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet clean:*)",
       "mcp__github__create_repository",
       "mcp__tavily__tavily-search"
     ],
