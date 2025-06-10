@@ -28,7 +28,16 @@
       "Bash(git stash:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet clean:*)",
-      "mcp__github__create_repository"
+      "mcp__MCP_DOCKER__resolve-library-id",
+      "mcp__MCP_DOCKER__get-library-docs",
+      "mcp__MCP_DOCKER__firecrawl_scrape",
+      "mcp__MCP_DOCKER__firecrawl_map",
+      "mcp__MCP_DOCKER__firecrawl_crawl",
+      "mcp__MCP_DOCKER__firecrawl_check_crawl_status",
+      "mcp__MCP_DOCKER__firecrawl_search",
+      "mcp__MCP_DOCKER__firecrawl_extract",
+      "mcp__MCP_DOCKER__firecrawl_deep_research",
+      "mcp__MCP_DOCKER__firecrawl_generate_llmstxt"
     ],
     "deny": [
       "Bash(git push:*)"
