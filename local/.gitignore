@@ -2,7 +2,5 @@
 /*
 !.gitignore
 
-!CLAUDE.md
-!/commands/
-!/local/
-!/settings.json
+!claude
+!package.json

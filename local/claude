@@ -1,0 +1,8 @@
+#!/bin/sh
+
+CLAUDE_DIR="${XDG_DATA_HOME:-${HOME}/.claude}/local"
+[ ! -f "${CLAUDE_DIR}/node_modules/.bin/claude" ] && \
+    npm install --prefix "${CLAUDE_DIR}" >/dev/null && \
+    exec "${0}" "${@}"
+
+exec "${CLAUDE_DIR}/node_modules/.bin/claude" "${@}"
