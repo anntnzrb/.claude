@@ -1,4 +1,6 @@
 {
+  "model": "sonnet",
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Bash(cat:*)",
@@ -43,5 +45,4 @@
       "Bash(git push:*)"
     ]
   },
-  "model": "sonnet"
 }
