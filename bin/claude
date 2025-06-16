@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# This script manages Claude Code execution and configuration.
+#
+# The script performs two primary functions:
+# 1. Executes Claude Code using bunx (no local installation needed)
+# 2. Merges configurations into the global Claude configuration
+#
+# The configuration merge allows defining Claude settings (such as MCP servers
+# amongst others) in a local claude.json file, which are then merged into the
+# global ~/.claude.json configuration.
+#
+# Requirements:
+#   - bun (for Claude execution)
+#   - jq (for configuration merging, optional)
+
+# constants
+GLOBAL_CONFIG="${HOME}/.claude.json"
+LOCAL_CONFIG="./claude.json"
+
+# log to stderr and exit failure
+die() {
+  printf "Error: %s\n" "${1}" >&2
+  exit 1
+}
+
+# ensure bun is available
+ensure_bun() {
+  command -v bun >/dev/null 2>&1 || die "bun is required but not installed."
+}
+
+# attempt to merge configurations if conditions are met
+attempt_merge() {
+  command -v jq >/dev/null 2>&1 \
+    && jq -s '.[0] * .[1]' \
+      "${GLOBAL_CONFIG}" "${LOCAL_CONFIG}" >"${GLOBAL_CONFIG}.tmp" \
+    && mv "${GLOBAL_CONFIG}.tmp" "${GLOBAL_CONFIG}"
+
+  # always continue, merge is optional
+  return 0
+}
+
+# launch claude with provided arguments
+launch_claude() {
+  exec bunx @anthropic-ai/claude-code@latest "${@}"
+}
+
+# main
+ensure_bun \
+  && attempt_merge \
+  && launch_claude "${@}"
