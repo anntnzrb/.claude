@@ -4,15 +4,12 @@
   "autoCompactEnabled": true,
   "todoFeatureEnabled": true,
   "mcpServers": {
-    "MCP_DOCKER": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "alpine/socat",
-        "STDIO",
-        "TCP:host.docker.internal:8811"
+    "MCP_DOCKER":{
+      "command":"docker",
+      "args":[
+        "mcp",
+        "gateway",
+        "run"
       ]
     }
   }
