@@ -7,10 +7,10 @@
 </meta>
 
 <tool_guidelines>
-<web>NEVER use `WebSearch`/`WebFetch` - use `Firecrawl` MCP tools only</web>
+<web>NEVER use `WebSearch`/`WebFetch` - use `tavily` MCP tools only</web>
 <libraries>
 - NEVER rely on internal knowledge for external libraries/frameworks/APIs - always check current docs
-- Use `Context7` MCP tools first; if unavailable/insufficient, use <web>
+- Use `context7` MCP tools first; if unavailable/insufficient, use <web>
 - Internal knowledge outdated; external sources current
 </libraries>
 </tool_guidelines>

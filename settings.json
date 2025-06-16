@@ -12,8 +12,8 @@
       "Bash(fd:*)",
       "Bash(find:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)",
       "Bash(git checkout:*)",
+      "Bash(git commit:*)",
       "Bash(git stash:*)",
       "Bash(grep:*)",
       "Bash(head:*)",
@@ -38,7 +38,11 @@
       "mcp__MCP_DOCKER__firecrawl_search",
       "mcp__MCP_DOCKER__firecrawl_extract",
       "mcp__MCP_DOCKER__firecrawl_deep_research",
-      "mcp__MCP_DOCKER__firecrawl_generate_llmstxt"
+      "mcp__MCP_DOCKER__firecrawl_generate_llmstxt",
+      "mcp__MCP_DOCKER__tavily-crawl",
+      "mcp__MCP_DOCKER__tavily-extract",
+      "mcp__MCP_DOCKER__tavily-map",
+      "mcp__MCP_DOCKER__tavily-search"
     ],
     "deny": []
   },
