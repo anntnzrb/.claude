@@ -15,8 +15,9 @@
 #   - jq (for configuration merging, optional)
 
 # constants
+CLAUDE_DIR="${HOME}/.claude"
 GLOBAL_CONFIG="${HOME}/.claude.json"
-LOCAL_CONFIG="./claude.json"
+LOCAL_CONFIG="${CLAUDE_DIR}/claude.json"
 
 # log to stderr and exit failure
 die() {
