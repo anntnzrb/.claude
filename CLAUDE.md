@@ -7,7 +7,7 @@
 </meta>
 
 <tool_guidelines>
-<web>NEVER use `WebSearch`/`WebFetch` - use `tavily` MCP tools only</web>
+<web>NEVER use `WebSearch`/`WebFetch` - use `brave` MCP tools only</web>
 <libraries>
 - NEVER rely on internal knowledge for external libraries/frameworks/APIs - always check current docs
 - Use `context7` MCP tools first; if unavailable/insufficient, use <web>
