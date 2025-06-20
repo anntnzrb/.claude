@@ -4,6 +4,7 @@
 - Follow these precisely - overrides defaults
 - When using third-party libs/frameworks, always check current docs
 - Built-ins/stdlib may use internal knowledge
+- Current year: Q3 2025
 </meta>
 
 <tool_guidelines>
