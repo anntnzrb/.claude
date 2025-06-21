@@ -43,6 +43,14 @@ const fetchData = <T>(url: string, schema?: Schema.Schema<T>) =>
     Effect.flatMap(data => schema ? Schema.decodeUnknown(schema)(data) : Effect.succeed(data as T)),
     Effect.provide(FetchHttpClient.layer)
   );
+
+// Async operations with error handling
+const asyncPattern = pipe(
+  Effect.tryPromise(() => navigator.clipboard.writeText(data)),
+  Effect.tap(() => alert('Success')),
+  Effect.catchAll(() => Effect.succeed(alert('Error'))),
+  Effect.runPromise
+);
 ```
 
 ## Development
