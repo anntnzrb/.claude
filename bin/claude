@@ -43,7 +43,7 @@ attempt_merge() {
 
 # launch claude with provided arguments
 launch_claude() {
-  exec bunx @anthropic-ai/claude-code@latest "${@}"
+  exec bunx --bun --smol @anthropic-ai/claude-code@latest "${@}"
 }
 
 # main
