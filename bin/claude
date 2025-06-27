@@ -33,6 +33,7 @@ ensure_bun() {
 # attempt to merge configurations if conditions are met
 attempt_merge() {
   command -v jq >/dev/null 2>&1 \
+    && touch "${GLOBAL_CONFIG}" \
     && jq -s '.[0] * .[1]' \
       "${GLOBAL_CONFIG}" "${LOCAL_CONFIG}" >"${GLOBAL_CONFIG}.tmp" \
     && mv "${GLOBAL_CONFIG}.tmp" "${GLOBAL_CONFIG}"
