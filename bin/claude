@@ -44,7 +44,10 @@ attempt_merge() {
 
 # launch claude with provided arguments
 launch_claude() {
-  exec bunx --bun --smol @anthropic-ai/claude-code@latest "${@}"
+  export BUN_JSC_useJIT=1
+  export BUN_JSC_useDFGJIT=1
+  export BUN_JSC_useFTLJIT=1
+  exec bunx --bun @anthropic-ai/claude-code@latest "${@}"
 }
 
 # main
