@@ -36,7 +36,7 @@
       "Bash(timeout:*)",
       "Bash(uvx ruff:*)",
       "Bash(wc:*)",
-      "WebFetch(domain:*)",
+      "WebFetch",
       "mcp__MCP_DOCKER__brave_local_search",
       "mcp__MCP_DOCKER__brave_web_search",
       "mcp__MCP_DOCKER__firecrawl_check_crawl_status",
