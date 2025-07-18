@@ -47,7 +47,7 @@ launch_claude() {
   export BUN_JSC_useJIT=1
   export BUN_JSC_useDFGJIT=1
   export BUN_JSC_useFTLJIT=1
-  exec bunx --bun @anthropic-ai/claude-code@latest "${@}"
+  exec bunx @anthropic-ai/claude-code@latest --dangerously-skip-permissions "${@}"
 }
 
 # main
