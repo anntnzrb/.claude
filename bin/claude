@@ -34,7 +34,7 @@ ensure_bun() {
 attempt_merge() {
   command -v jq >/dev/null 2>&1 \
     && touch "${GLOBAL_CONFIG}" \
-    && jq -s '.[0] * .[1]' \
+    && jq -s '.[0] + .[1]' \
       "${GLOBAL_CONFIG}" "${LOCAL_CONFIG}" >"${GLOBAL_CONFIG}.tmp" \
     && mv "${GLOBAL_CONFIG}.tmp" "${GLOBAL_CONFIG}"
 
