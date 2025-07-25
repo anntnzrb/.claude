@@ -6,11 +6,16 @@
   "mcpServers": {
     "MCP_DOCKER":{
       "command":"docker",
+      "type": "stdio",
       "args":[
         "mcp",
         "gateway",
         "run"
       ]
+    },
+    "semgrep": {
+      "type": "http",
+      "url": "https://mcp.semgrep.ai/mcp"
     }
   }
 }
