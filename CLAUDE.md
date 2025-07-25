@@ -7,9 +7,12 @@
 <tool_guidelines>
 <libraries>
 - NEVER rely on internal knowledge for external libraries/frameworks/APIs - always check up-to-date documentation
-- Use `get-library-docs` & `resolve-library-id` to gather up-to-date documentation
+- Use `ref_search_documentation` & `ref_read_url` to gather up-to-date documentation
 - Fallback to web tools
 </libraries>
+<web>
+- NEVER use `WebFetch` or `WebSearch` - prefer `web_search_exa`
+</web>
 <responding>
 - ALWAYS use `sequentialthinking` tool after every message
 </responding>
