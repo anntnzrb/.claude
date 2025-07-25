@@ -22,9 +22,6 @@
 </tool_guidelines>
 
 <development>
-<git>
-- ALWAYS create branch before any changes
-- Switch to main, rebase merge (NEVER merge)
-</git>
+<git>Prefer rebase over merge</git>
 <planning>Use `TodoWrite` extensively</planning>
 </development>
