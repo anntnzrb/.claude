@@ -16,6 +16,19 @@
     "semgrep": {
       "type": "http",
       "url": "https://mcp.semgrep.ai/mcp"
+    },
+    "cogitare": {
+      "command": "docker",
+      "type": "stdio",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--init",
+        "--pull",
+        "always",
+        "ghcr.io/anntnzrb/cogitare:latest"
+      ]
     }
   }
 }

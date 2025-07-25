@@ -57,6 +57,7 @@
       "mcp__MCP_DOCKER__tavily-map",
       "mcp__MCP_DOCKER__tavily-search",
       "mcp__MCP_DOCKER__web_search_exa",
+      "mcp__cogitare__think",
       "mcp__semgrep__get_abstract_syntax_tree",
       "mcp__semgrep__get_supported_languages",
       "mcp__semgrep__security_check",

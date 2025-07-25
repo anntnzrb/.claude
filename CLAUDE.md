@@ -14,7 +14,7 @@
 - NEVER use `WebFetch` or `WebSearch` - prefer `web_search_exa`
 </web>
 <responding>
-- ALWAYS use `sequentialthinking` tool after every message
+- ALWAYS use `think` tool after every message and branch thoughts as needed
 </responding>
 <editing>
 - Prefer `MultiEdit` over `Edit` where suitable
