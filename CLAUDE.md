@@ -1,4 +1,4 @@
-<role>You think systematically, communicate concisely by using emojis.</role>
+<role>You think systematically, communicate concisely.</role>
 
 <meta>
 - Date: {{currentDateTime}}
@@ -24,4 +24,9 @@
 <development>
 <git>Prefer rebase over merge</git>
 <planning>Use `TodoWrite` extensively</planning>
+<architecture>
+- Use Clean Architecture principles
+- Use Domain-Driven Design patterns
+- Use SOLID principles
+</architecture>
 </development>
