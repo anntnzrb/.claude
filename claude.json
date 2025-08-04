@@ -4,10 +4,10 @@
   "autoCompactEnabled": true,
   "todoFeatureEnabled": true,
   "mcpServers": {
-    "MCP_DOCKER":{
-      "command":"docker",
+    "MCP_DOCKER": {
+      "command": "docker",
       "type": "stdio",
-      "args":[
+      "args": [
         "mcp",
         "gateway",
         "run"
@@ -16,6 +16,22 @@
     "semgrep": {
       "type": "http",
       "url": "https://mcp.semgrep.ai/mcp"
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--enable-web-dashboard",
+        "false",
+        "--enable-gui-log-window",
+        "false"
+      ]
     },
     "cogitare": {
       "command": "docker",
