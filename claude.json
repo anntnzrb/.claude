@@ -13,10 +13,6 @@
         "run"
       ]
     },
-    "semgrep": {
-      "type": "http",
-      "url": "https://mcp.semgrep.ai/mcp"
-    },
     "serena": {
       "type": "stdio",
       "command": "uvx",
