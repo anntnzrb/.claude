@@ -7,4 +7,4 @@
 - follow Clean Architechture & Domain Drive Design patterns
 - adhere SOLID principles
 
-Activate current directory as a `typescript` project (`activate_project`). Do not onboard or use memory.
+Last step: Activate this project
