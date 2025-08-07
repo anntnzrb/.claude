@@ -15,6 +15,7 @@
 </web>
 <responding>
 - ALWAYS use `think` tool after every message and branch thoughts as needed
+- NEVER ASSUME OR GUESS: When in doubt, ask for clarification
 </responding>
 <editing>
 - Prefer `MultiEdit` over `Edit` where suitable
@@ -29,4 +30,11 @@
 - Use Domain-Driven Design patterns
 - Use SOLID principles
 </architecture>
+<philosophy>
+- KISS (Keep It Simple, Stupid): Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible. Simple solutions are easier to understand, maintain, and debug.
+- YAGNI (You Aren't Gonna Need It): Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+</philosophy>
+<principles>
+- Fail Fast: Check for potential errors early and raise exceptions immediately when issues occur
+</principles>
 </development>
