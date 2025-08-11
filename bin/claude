@@ -3,7 +3,7 @@
 # This script manages Claude Code execution and configuration.
 #
 # The script performs two primary functions:
-# 1. Executes Claude Code using bunx (no local installation needed)
+# 1. Executes Claude Code
 # 2. Merges configurations into the global Claude configuration
 #
 # The configuration merge allows defining Claude settings (such as MCP servers
@@ -11,7 +11,6 @@
 # global ~/.claude.json configuration.
 #
 # Requirements:
-#   - bun (for Claude execution)
 #   - jq (for configuration merging, optional)
 
 # constants
@@ -23,11 +22,6 @@ LOCAL_CONFIG="${CLAUDE_DIR}/claude.json"
 die() {
   printf "Error: %s\n" "${1}" >&2
   exit 1
-}
-
-# ensure bun is available
-ensure_bun() {
-  command -v bun >/dev/null 2>&1 || die "bun is required but not installed."
 }
 
 # attempt to merge configurations if conditions are met
@@ -44,13 +38,9 @@ attempt_merge() {
 
 # launch claude with provided arguments
 launch_claude() {
-  export BUN_JSC_useJIT=1
-  export BUN_JSC_useDFGJIT=1
-  export BUN_JSC_useFTLJIT=1
-  exec bunx @anthropic-ai/claude-code@latest --dangerously-skip-permissions "${@}"
+  exec nix --accept-flake-config run github:numtide/nix-ai-tools#claude-code -- --dangerously-skip-permissions "${@}"
 }
 
 # main
-ensure_bun \
-  && attempt_merge \
+attempt_merge \
   && launch_claude "${@}"
