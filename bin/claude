@@ -38,7 +38,14 @@ attempt_merge() {
 
 # launch claude with provided arguments
 launch_claude() {
-  exec nix --accept-flake-config run github:numtide/nix-ai-tools#claude-code -- --dangerously-skip-permissions "${@}"
+  exec nix \
+    run \
+    --set-env-var DISABLE_AUTOUPDATER 1 \
+    --set-env-var CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC 1 \
+    --set-env-var DISABLE_NON_ESSENTIAL_MODEL_CALLS 1 \
+    --set-env-var DISABLE_TELEMETRY 1 \
+    --unset-env-var DEV \
+    'https://channels.nixos.org/nixos-25.05-small/nixexprs.tar.xz'#bun -- x --bun '@anthropic-ai/claude-code@latest' --dangerously-skip-permissions "${@}"
 }
 
 # main
