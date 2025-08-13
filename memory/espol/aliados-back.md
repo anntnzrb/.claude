@@ -2,4 +2,4 @@
 @docs/architecture.md
 @docs/performance.md
 
-Last step: Activate this project
+NEVER run the server, user will do for you. DO NOT `dotnet run`.
