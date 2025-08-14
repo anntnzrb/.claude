@@ -1,162 +1,173 @@
 #!/bin/sh
 
-# Status line for Claude Code
+# coding guidelines:
+# - prefer branchless programming: use chain operators (&&, ||) instead of if-else for simple conditional logic
+# - posix compliance: avoid bashisms, use portable shell constructs
+# - use portable alternatives (printf over echo, standard tools over bashisms)
+# - choose tools wisely: builtins for simple tasks, external tools when they add clear value
+# - balance availability, performance, and appropriateness in tool selection
 
-# read & parse input
-input=$(cat)
+# statusline for claude code
 
-# Save JSON input to file with comments for removal - REMOVE_START
-echo "# JSON input saved on $(date)" > ~/.claude/statusline-input.json  # REMOVE_LINE
-echo "# You can remove lines marked with REMOVE_LINE or between REMOVE_START/REMOVE_END" >> ~/.claude/statusline-input.json  # REMOVE_LINE
-echo "$input" >> ~/.claude/statusline-input.json  # REMOVE_LINE
-# REMOVE_END
+read_json_input() {
+  ### reads json from stdin or file, filtering comments
+  ### args: ${1} optional file path (if provided, reads from file; otherwise stdin)
+  ### returns: json content via stdout
 
-# Parse JSON fields using shell parameter expansion
-model=${input#*'"display_name":"'} && model=${model%%'"'*}
-cwd=${input#*'"current_dir":"'} && cwd=${cwd%%'"'*}
-style=${input#*'"name":"'} && style=${style%%'"'*}
-transcript_path=${input#*'"transcript_path":"'} && transcript_path=${transcript_path%%'"'*}
+    { [ ${#} -gt 0 ] && grep -v '^#' "${1}"; } || cat
+}
 
-# Extract token usage and user message count from transcript JSONL file
+parse_json_fields() {
+  ### extracts fields from json input and captures for debugging
+  ### args: ${1} json input string
+  ### exports: model, full_cwd, style, transcript_path, version
+
+    input="${1}"
+
+    # helper function to extract json fields
+    jqr() {
+        printf '%s' "${input}" | jq -r "${1}"
+    }
+
+    session_id=$(jqr '.session_id // "unknown"')
+
+    capture_file="/tmp/claude-statusline-${session_id}.json"
+    printf "# json input captured on %s\n" "$(date)" > "${capture_file}"
+    printf "%s\n" "${input}" >> "${capture_file}"
+
+    model=$(jqr '.model.id // "claude"' | sed 's/^claude-//')
+    full_cwd=$(jqr '.workspace.current_dir // .cwd // ""')
+    style=$(jqr '.output_style.name // "default"')
+    transcript_path=$(jqr '.transcript_path // ""')
+    version=$(jqr '.version // ""')
+
+    export model full_cwd style transcript_path version
+}
+
+get_display_path() {
+  ### formats path for display (git-aware, home-relative, or truncated)
+  ### args: ${1} full directory path
+  ### returns: formatted display path via stdout
+
+    path="${1}"
+
+    { cd "${path}" 2>/dev/null; } || {
+        printf "%s\n" "${path}"
+        return
+    }
+
+    { git rev-parse --git-dir >/dev/null 2>&1; } && {
+        repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+        { [ -n "${repo_root}" ]; } && {
+            repo_name=$(basename "${repo_root}")
+
+            rel_path=$(printf "%s" "${path}" | sed "s|^${repo_root}/*||")
+            { [ -z "${rel_path}" ]; } && rel_path="."
+
+            { [ "${rel_path}" = "." ] && printf "%s\n" "${repo_name}"; } || printf "%s/%s\n" "${repo_name}" "${rel_path}"
+            return
+        }
+    }
+
+    { [ -n "${HOME}" ]; } && {
+        case "${path}" in "${HOME}"*)
+            shortened=$(printf "%s" "${path}" | sed "s|^${HOME}||")
+            { [ -z "${shortened}" ] && printf "~\n"; } || printf "~%s\n" "${shortened}"
+            return
+            ;;
+        esac
+    }
+
+    printf "%s\n" "${path}" | awk -F'/' '{
+        if (NF <= 2) print $0
+        else printf "%s/%s\n", $(NF-1), $NF
+    }'
+}
+
 extract_usage_from_transcript() {
-    local transcript="$1"
-    
-    # Check if transcript file exists and is readable
-    if [ ! -f "$transcript" ] || [ ! -r "$transcript" ]; then
-        return 1
-    fi
-    
-    # Initialize counters
-    local total_input=0
-    local total_output=0
-    local total_cache_creation=0
-    local total_cache_read=0
-    local user_msg_count=0
-    
-    # Read JSONL file line by line and extract usage data
-    while IFS= read -r line; do
-        # Skip empty lines
-        [ -z "$line" ] && continue
-        
-        # Count user messages (exclude tool results)
-        if echo "$line" | grep -q '"type":"user"' && ! echo "$line" | grep -q '"toolUseResult"'; then
-            user_msg_count=$((user_msg_count + 1))
-        fi
-        
-        # Check if line contains usage data
-        if echo "$line" | grep -q '"usage"'; then
-            # Extract token values using basic string manipulation
-            input=$(echo "$line" | sed -n 's/.*"input_tokens":\([0-9]*\).*/\1/p')
-            output=$(echo "$line" | sed -n 's/.*"output_tokens":\([0-9]*\).*/\1/p')
-            cache_creation=$(echo "$line" | sed -n 's/.*"cache_creation_input_tokens":\([0-9]*\).*/\1/p')
-            cache_read=$(echo "$line" | sed -n 's/.*"cache_read_input_tokens":\([0-9]*\).*/\1/p')
-            
-            # Add to totals (default to 0 if not found)
-            total_input=$((total_input + ${input:-0}))
-            total_output=$((total_output + ${output:-0}))
-            total_cache_creation=$((total_cache_creation + ${cache_creation:-0}))
-            total_cache_read=$((total_cache_read + ${cache_read:-0}))
-        fi
-    done < "$transcript"
-    
-    # Output the totals including user message count
-    echo "$total_input $total_output $total_cache_creation $total_cache_read $user_msg_count"
+  ### counts user messages in transcript file
+  ### args: ${1} transcript file path
+  ### returns: message count via stdout, or exits with error if file unreadable
+
+    transcript="${1}"
+
+    { [ -f "${transcript}" ] && [ -r "${transcript}" ]; } || return 1
+
+    # count user messages, skip empty lines and tool results
+    grep -v -e '^[[:space:]]*$' -e '"toolUseResult"' "${transcript}" | grep -c '"type":"user"'
 }
 
-# Get usage data from transcript
-if [ -n "$transcript_path" ]; then
-    usage_data=$(extract_usage_from_transcript "$transcript_path")
-    if [ $? -eq 0 ] && [ -n "$usage_data" ]; then
-        input_tokens=$(echo "$usage_data" | cut -d' ' -f1)
-        output_tokens=$(echo "$usage_data" | cut -d' ' -f2)
-        cache_creation_tokens=$(echo "$usage_data" | cut -d' ' -f3)
-        cache_read_tokens=$(echo "$usage_data" | cut -d' ' -f4)
-        user_msg_count=$(echo "$usage_data" | cut -d' ' -f5)
-    else
-        # No transcript data available
-        input_tokens=0
-        output_tokens=0
-        cache_creation_tokens=0
-        cache_read_tokens=0
-        user_msg_count=0
-    fi
-else
-    # No transcript path provided
-    input_tokens=0
-    output_tokens=0
-    cache_creation_tokens=0
-    cache_read_tokens=0
+get_usage_count() {
+  ### gets validated user message count from transcript
+  ### args: ${1} transcript file path
+  ### exports: user_msg_count (defaults to 0 if invalid/missing)
+
+    transcript_path="${1}"
+
     user_msg_count=0
-fi
+    { [ -n "${transcript_path}" ]; } && {
+        temp_count=$(extract_usage_from_transcript "${transcript_path}")
+        { printf "%s" "${temp_count}" | grep -q '^[0-9]\+$'; } && {
+            user_msg_count="${temp_count}"
+        }
+    }
 
-# Calculate session cost estimation
-calculate_cost() {
-    local input_t="$1"
-    local output_t="$2" 
-    local cache_creation_t="$3"
-    local cache_read_t="$4"
-    
-    # Handle empty/missing values
-    input_t=${input_t:-0}
-    output_t=${output_t:-0}
-    cache_creation_t=${cache_creation_t:-0}
-    cache_read_t=${cache_read_t:-0}
-    
-    # Pricing per token (approximations)
-    # Input: $0.000015, Output: $0.000075, Cache read: $0.000001
-    # Using integer arithmetic (multiply by 1000000 to avoid floating point)
-    
-    # Calculate costs in micro-dollars (multiply by 1,000,000)
-    input_cost=$((input_t * 15))           # 0.000015 * 1,000,000 = 15
-    output_cost=$((output_t * 75))         # 0.000075 * 1,000,000 = 75  
-    cache_creation_cost=$((cache_creation_t * 15))  # Same as input
-    cache_read_cost=$((cache_read_t * 1))  # 0.000001 * 1,000,000 = 1
-    
-    # Total in micro-dollars
-    total_micro=$((input_cost + output_cost + cache_creation_cost + cache_read_cost))
-    
-    # Convert to dollars and cents
-    if [ $total_micro -lt 1000 ]; then
-        # Less than $0.001, show in sub-cents
-        printf "¢0.%d" $((total_micro / 10))
-    elif [ $total_micro -lt 10000 ]; then
-        # Less than $0.01, show in tenth-cents  
-        cents=$((total_micro / 10))
-        printf "¢%d.%d" $((cents / 100)) $((cents % 100))
-    elif [ $total_micro -lt 100000 ]; then
-        # Less than $0.10, show in cents
-        printf "¢%d" $((total_micro / 10000))
-    else
-        # $0.10 or more, show in dollars
-        dollars=$((total_micro / 1000000))
-        cents=$(((total_micro % 1000000) / 10000))
-        if [ $cents -eq 0 ]; then
-            printf "$%d" $dollars
-        else
-            printf "$%d.%02d" $dollars $cents
-        fi
-    fi
+    export user_msg_count
 }
 
 
-# Only calculate cost if we have actual token data
-if [ "$input_tokens" -gt 0 ] || [ "$output_tokens" -gt 0 ] || [ "$cache_creation_tokens" -gt 0 ] || [ "$cache_read_tokens" -gt 0 ]; then
-    cost_display=$(calculate_cost "$input_tokens" "$output_tokens" "$cache_creation_tokens" "$cache_read_tokens")
-else
-    cost_display=""
-fi
+build_status_components() {
+  ### assembles status line parts from parsed data
+  ### exports: model_part, style_part, msg_part, version_part
 
-# git
-branch=$(git branch --show-current 2>/dev/null)
-dirty=$([ -n "$(git status --porcelain 2>/dev/null)" ] && printf "*")
+    model_part="🧠${model:-Claude}"
 
-# builder
-model_part="${model:-Claude}"
-git_part=$([ -n "${branch}" ] && printf " %s%s" "${branch}" "${dirty}")
-style_part=$([ "${style}" != "default" ] && [ -n "${style}" ] && printf " [%s]" "${style}")
-cost_part=$([ -n "${cost_display}" ] && printf " %s" "${cost_display}")
-msg_part=$([ "${user_msg_count:-0}" -gt 0 ] && printf " %dm" "${user_msg_count}")
+    style_part=""
+    { [ "${style}" != "default" ] && [ -n "${style}" ]; } && {
+        style_part=$(printf " [%s]" "${style}")
+    }
 
-# output
-printf "\033[2m%s\033[0m \033[36m%s\033[0m\033[2m%s%s%s\033[0m\033[32m%s\033[0m\n" \
-    "${model_part}" "${cwd}" "${git_part}" "${style_part}" "${msg_part}" "${cost_part}"
+    msg_part=""
+    { [ "${user_msg_count}" -gt 0 ] 2>/dev/null; } && {
+        msg_part=$(printf " 💬%d" "${user_msg_count}")
+    }
+
+    version_part=""
+    { [ -n "${version}" ]; } && {
+        version_part=$(printf "[v%s] " "${version}")
+    }
+
+    export model_part style_part msg_part version_part
+}
+
+output_status_line() {
+  ### prints formatted status line with ansi colors
+  ### args: $1 current working directory display path
+
+    cwd="${1}"
+
+    # ansi color codes
+    dim="\033[2m"
+    cyan="\033[36m"
+    reset="\033[0m"
+
+    printf "${dim}%s%s${reset} @ ${cyan}📁%s/${reset}%s%s · %s\n" \
+        "${version_part}" "${model_part}" "${cwd}" "${style_part}" "${msg_part}"
+}
+
+main() {
+  ### orchestrates statusline generation using compose method pattern
+  ### args: ${@} all command line arguments (passed to read_json_input)
+
+    input=$(read_json_input "${@}")
+    parse_json_fields "${input}"
+
+    cwd=$(get_display_path "${full_cwd}")
+
+    get_usage_count "${transcript_path}"
+
+    build_status_components
+    output_status_line "${cwd}"
+}
+
+main "${@}"
