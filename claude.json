@@ -3,6 +3,7 @@
   "verbose": false,
   "autoCompactEnabled": true,
   "todoFeatureEnabled": true,
+  "defaultOutputStyle": "bro",
   "mcpServers": {
     "MCP_DOCKER": {
       "command": "docker",
