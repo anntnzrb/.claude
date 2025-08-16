@@ -1,53 +1,107 @@
-#!/bin/sh
+#!/usr/bin/env bun
 
-# This script manages Claude Code execution and configuration.
-#
-# The script performs two primary functions:
-# 1. Executes Claude Code
-# 2. Merges configurations into the global Claude configuration
-#
-# The configuration merge allows defining Claude settings (such as MCP servers
-# amongst others) in a local claude.json file, which are then merged into the
-# global ~/.claude.json configuration.
-#
-# Requirements:
-#   - jq (for configuration merging, optional)
+/**
+ * Claude Code execution and configuration management script
+ *
+ * This script performs the following:
+ * 1. Merges local project configurations into the global Claude configuration
+ * 2. Executes Claude Code using Bun with proper environment setup
+ *
+ * The configuration merge allows defining Claude settings (such as MCP servers
+ * amongst others) in a local claude.json file, which are then merged into the
+ * global ~/.claude.json configuration before Claude Code is launched.
+ */
 
-# constants
-CLAUDE_DIR="${HOME}/.claude"
-GLOBAL_CONFIG="${HOME}/.claude.json"
-LOCAL_CONFIG="${CLAUDE_DIR}/claude.json"
+import { existsSync } from "fs";
+import { homedir } from "os";
+import { join } from "path";
 
-# log to stderr and exit failure
-die() {
-  printf "Error: %s\n" "${1}" >&2
-  exit 1
-}
+/** ***
+ * Core utilities
+ * *** **/
 
-# attempt to merge configurations if conditions are met
-attempt_merge() {
-  command -v jq >/dev/null 2>&1 \
-    && touch "${GLOBAL_CONFIG}" \
-    && jq -s '.[0] + .[1]' \
-      "${GLOBAL_CONFIG}" "${LOCAL_CONFIG}" >"${GLOBAL_CONFIG}.tmp" \
-    && mv "${GLOBAL_CONFIG}.tmp" "${GLOBAL_CONFIG}"
+/** Log error to stderr and exit with failure code */
+const die = (msg: string): never => (
+  console.error(`Error: ${msg}`),
+  process.exit(1)
+);
 
-  # always continue, merge is optional
-  return 0
-}
+/** Safely read JSON config file, returning empty object on error */
+const safeJson = (path: string) =>
+  existsSync(path)
+    ? Bun.file(path)
+        .json()
+        .catch(() => ({}))
+    : {};
 
-# launch claude with provided arguments
-launch_claude() {
-  exec nix \
-    run \
-    --set-env-var DISABLE_AUTOUPDATER 1 \
-    --set-env-var CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC 1 \
-    --set-env-var DISABLE_NON_ESSENTIAL_MODEL_CALLS 1 \
-    --set-env-var DISABLE_TELEMETRY 1 \
-    --unset-env-var DEV \
-    'https://channels.nixos.org/nixos-25.05-small/nixexprs.tar.xz'#bun -- x --bun '@anthropic-ai/claude-code@latest' --dangerously-skip-permissions "${@}"
-}
+/** ***
+ * Configuration constants
+ * *** **/
 
-# main
-attempt_merge \
-  && launch_claude "${@}"
+/** File system paths for Claude configuration files */
+const paths = {
+  local: join(homedir(), ".claude", "claude.json"), // Project-local config to merge
+  global: join(homedir(), ".claude.json"), // Global Claude configuration file
+};
+
+/** Environment variables to disable non-essential Claude features */
+const claudeEnv = {
+  DISABLE_AUTOUPDATER: "1",
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
+  DISABLE_NON_ESSENTIAL_MODEL_CALLS: "1",
+  DISABLE_TELEMETRY: "1",
+} as const;
+
+/** Claude Code execution command components */
+const claudeCmd = [
+  "bun",
+  "x",
+  "--bun",
+  "@anthropic-ai/claude-code@latest",
+  "--dangerously-skip-permissions",
+] as const;
+
+/** ***
+ * Core Claude Code functionality
+ * *** **/
+
+/**
+ * Merge local project configs into global configuration
+ * @returns Promise that resolves when merge is complete or skipped
+ */
+const mergeConfigs = () =>
+  (existsSync(paths.local) &&
+    Promise.all([safeJson(paths.global), safeJson(paths.local)])
+      .then(([global, local]) => ({ ...global, ...local }))
+      .then((merged) =>
+        Bun.write(paths.global, JSON.stringify(merged, null, 2)),
+      )
+      .catch((err) => console.warn(`Config merge failed: ${err}`))) ||
+  Promise.resolve();
+
+/** Create environment object with Claude variables and DEV removed */
+const setupEnv = () => ({ ...process.env, ...claudeEnv, DEV: undefined });
+
+/**
+ * Spawn Claude with provided arguments
+ * @param args - Command line arguments to pass to Claude Code
+ * @returns Function that takes environment and spawns Claude process
+ */
+const spawnClaude = (args: string[]) => (env: Record<string, any>) =>
+  Bun.spawn([...claudeCmd, ...args], {
+    env,
+    stdio: ["inherit", "inherit", "inherit"],
+  });
+
+/** ***
+ * Main
+ * *** **/
+
+const [, , ...args] = process.argv;
+
+mergeConfigs()
+  .then(() => setupEnv())
+  .then(spawnClaude(args))
+  .then((proc) => proc.exited)
+  .then(process.exit)
+  .catch(die);
