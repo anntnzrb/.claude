@@ -19,6 +19,7 @@
 </responding>
 <editing>
 - Prefer `MultiEdit` over `Edit` where suitable
+- Prefer using serena's semantic search/edit tools as they provide LSP-based symbol understanding and precise code navigation, in contrast to basic file reading which is token-inefficient and lacks structural awareness. NEVER perform onboarding unless explicitely told to do so.
 </editing>
 </tool_guidelines>
 
