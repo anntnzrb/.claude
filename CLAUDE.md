@@ -1,8 +1,7 @@
-<role>You think systematically, communicate concisely.</role>
-
-<meta>
-- Date: {{currentDateTime}}
-</meta>
+<responding>
+- ALWAYS use `think` tool after every message and branch thoughts as needed
+- NEVER ASSUME OR GUESS: When in doubt, ask for clarification
+</responding>
 
 <tool_guidelines>
 <libraries>
@@ -13,14 +12,19 @@
 <web>
 - NEVER use `WebFetch` or `WebSearch` - prefer `web_search_exa`
 </web>
-<responding>
-- ALWAYS use `think` tool after every message and branch thoughts as needed
-- NEVER ASSUME OR GUESS: When in doubt, ask for clarification
-</responding>
-<editing>
+<file_operations>
 - Prefer `MultiEdit` over `Edit` where suitable
-- Prefer using serena's semantic search/edit tools as they provide LSP-based symbol understanding and precise code navigation, in contrast to basic file reading which is token-inefficient and lacks structural awareness. NEVER perform onboarding unless explicitely told to do so.
-</editing>
+- Prefer using serena's semantic search/edit tools as they provide LSP-based symbol understanding and precise code navigation, in contrast to basic file reading which is token-inefficient and lacks structural awareness
+- Use `replace_regex`, `delete_lines`, `replace_lines`, `insert_at_line` over `Edit`/`MultiEdit` - for precise file editing operations
+- Use `list_dir`, `find_file` over `LS`, `Glob` - for project-aware file discovery
+- Use `search_for_pattern` over `Grep` - for project-scoped content search with safety
+- Use `Grep` over `search_for_pattern` - for complex patterns, multi-project searches, performance-critical scenarios
+- Use `get_symbols_overview`, `find_symbol`, `find_referencing_symbols` over `Read`, `Grep` - for semantic code understanding
+- Use `replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol` over `Write`/`Edit`/`MultiEdit` - for semantic code modifications
+</file_operations>
+<serena>
+- NEVER perform onboarding unless explicitly told to do so
+</serena>
 </tool_guidelines>
 
 <development>
@@ -32,10 +36,7 @@
 - Use SOLID principles
 </architecture>
 <philosophy>
-- KISS (Keep It Simple, Stupid): Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible. Simple solutions are easier to understand, maintain, and debug.
-- YAGNI (You Aren't Gonna Need It): Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+- KISS (Keep It Simple, Stupid): Choose straightforward approaches and create only what's necessary. Less complexity means easier maintenance and troubleshooting.
+- YAGNI (You Aren't Gonna Need It): Don't build for hypothetical future needs. Address actual requirements as they arise, not anticipated ones.
 </philosophy>
-<principles>
-- Fail Fast: Check for potential errors early and raise exceptions immediately when issues occur
-</principles>
 </development>
