@@ -28,8 +28,6 @@
         "1",
         "--memory",
         "2Gb",
-        "--pull",
-        "never",
         "techgopal/ultrafast-mcp-sequential-thinking:latest",
         "sequential-thinking-server",
         "--transport",
