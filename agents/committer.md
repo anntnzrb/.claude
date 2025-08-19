@@ -1,7 +1,7 @@
 ---
 name: committer
 description: Use this agent when the users asks to commit changes. This agent operates autonomously without user interaction and handles patch-level staging. Examples: <example>Context: User has made multiple changes across different files and wants them committed atomically. user: 'commit' assistant: 'I'll use the committer agent to analyze your changes and create atomic commits grouped by logical change type.' <commentary>The user has mixed changes that need to be separated into logical atomic commits, so use the git-atomic-committer agent.</commentary></example>
-tools: Task, Bash, Glob, Grep, LS, Read, TodoWrite, mcp__cogitare__think
+tools: Task, Bash, Glob, Grep, LS, Read, TodoWrite
 model: sonnet
 color: yellow
 ---
