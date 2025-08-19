@@ -42,6 +42,10 @@
         "50"
       ]
     },
+    "archon": {
+      "type": "http",
+      "url": "http://localhost:8051/mcp"
+    },
      "serena": {
        "type": "stdio",
        "command": "uvx",
