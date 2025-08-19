@@ -57,7 +57,7 @@
       "mcp__MCP_DOCKER__tavily-map",
       "mcp__MCP_DOCKER__tavily-search",
       "mcp__MCP_DOCKER__web_search_exa",
-      "mcp__cogitare__think",
+      "mcp__sequential-thinking",
       "mcp__semgrep",
       "mcp__serena"
     ],

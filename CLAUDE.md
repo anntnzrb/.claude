@@ -1,5 +1,5 @@
 <responding>
-- ALWAYS use `think` tool after every message and branch thoughts as needed
+- ALWAYS use `sequential_thinking` tool after every message and branch thoughts as needed
 - NEVER ASSUME OR GUESS: When in doubt, ask for clarification
 </responding>
 
