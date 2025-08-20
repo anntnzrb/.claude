@@ -20,13 +20,21 @@ import { join } from "path";
  * Core utilities
  * *** **/
 
-/** Log error to stderr and exit with failure code */
+/**
+ * Log error message to stderr and exit process with failure code
+ * @param msg - Error message to display
+ * @returns Never returns (process exits)
+ */
 const die = (msg: string): never => (
   console.error(`Error: ${msg}`),
   process.exit(1)
 );
 
-/** Safely read JSON config file, returning empty object on error */
+/**
+ * Safely read and parse JSON configuration file
+ * @param path - File system path to JSON file
+ * @returns Promise resolving to parsed JSON object or empty object on error
+ */
 const safeJson = (path: string) =>
   existsSync(path)
     ? Bun.file(path)
@@ -38,13 +46,21 @@ const safeJson = (path: string) =>
  * Configuration constants
  * *** **/
 
-/** File system paths for Claude configuration files */
+/**
+ * File system paths for Claude configuration files
+ * @readonly
+ */
 const paths = {
-  local: join(homedir(), ".claude", "claude.json"), // Project-local config to merge
-  global: join(homedir(), ".claude.json"), // Global Claude configuration file
+  /** Project-local configuration file path */
+  local: join(homedir(), ".claude", "claude.json"),
+  /** Global Claude configuration file path */
+  global: join(homedir(), ".claude.json"),
 };
 
-/** Environment variables to disable non-essential Claude features */
+/**
+ * Environment variables to disable non-essential Claude features
+ * @readonly
+ */
 const claudeEnv = {
   DISABLE_AUTOUPDATER: "1",
   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
@@ -52,7 +68,10 @@ const claudeEnv = {
   DISABLE_TELEMETRY: "1",
 } as const;
 
-/** Claude Code execution command components */
+/**
+ * Claude Code execution command components
+ * @readonly
+ */
 const claudeCmd = [
   "bun",
   "x",
@@ -79,7 +98,10 @@ const mergeConfigs = () =>
       .catch((err) => console.warn(`Config merge failed: ${err}`))) ||
   Promise.resolve();
 
-/** Create environment object with Claude variables and DEV removed */
+/**
+ * Create environment object with Claude variables and development flags removed
+ * @returns Environment object for Claude Code execution
+ */
 const setupEnv = () => ({ ...process.env, ...claudeEnv, DEV: undefined });
 
 /**
