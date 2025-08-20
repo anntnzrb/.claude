@@ -20,7 +20,7 @@ read_json_input() {
 parse_json_fields() {
   ### extracts fields from json input and captures for debugging
   ### args: ${1} json input string
-  ### exports: model, full_cwd, style, transcript_path, version
+  ### exports: model, full_cwd, style, transcript_path, version, session_cost, lines_added, lines_removed
 
     input="${1}"
 
@@ -40,8 +40,11 @@ parse_json_fields() {
     style=$(jqr '.output_style.name // "default"')
     transcript_path=$(jqr '.transcript_path // ""')
     version=$(jqr '.version // ""')
+    session_cost=$(jqr '.cost.total_cost_usd // 0')
+    lines_added=$(jqr '.cost.total_lines_added // 0')
+    lines_removed=$(jqr '.cost.total_lines_removed // 0')
 
-    export model full_cwd style transcript_path version
+    export model full_cwd style transcript_path version session_cost lines_added lines_removed
 }
 
 get_display_path() {
@@ -118,9 +121,9 @@ get_usage_count() {
 
 build_status_components() {
   ### assembles status line parts from parsed data
-  ### exports: model_part, style_part, msg_part, version_part
+  ### exports: model_part, style_part, msg_part, version_part, cost_part, lines_add_part, lines_rm_part, has_lines
 
-    model_part="🧠${model:-Claude}"
+    model_part="🧠 ${model:-Claude}"
 
     style_part=""
     { [ "${style}" != "default" ] && [ -n "${style}" ]; } && {
@@ -129,7 +132,7 @@ build_status_components() {
 
     msg_part=""
     { [ "${user_msg_count}" -gt 0 ] 2>/dev/null; } && {
-        msg_part=$(printf " 💬%d" "${user_msg_count}")
+        msg_part=$(printf " 💬 %d" "${user_msg_count}")
     }
 
     version_part=""
@@ -137,7 +140,25 @@ build_status_components() {
         version_part=$(printf "[v%s] " "${version}")
     }
 
-    export model_part style_part msg_part version_part
+    cost_part=""
+    { printf "%s" "${session_cost}" | grep -q '^[0-9]'; } && {
+        cost_part=$(printf " 💰 $%.2f" "${session_cost}")
+    }
+
+    lines_add_part=""
+    lines_rm_part=""
+    has_lines="false"
+    
+    { [ "${lines_added}" -gt 0 ] 2>/dev/null; } && {
+        lines_add_part="+${lines_added}"
+        has_lines="true"
+    }
+    { [ "${lines_removed}" -gt 0 ] 2>/dev/null; } && {
+        lines_rm_part="-${lines_removed}"
+        has_lines="true"
+    }
+
+    export model_part style_part msg_part version_part cost_part lines_add_part lines_rm_part has_lines
 }
 
 output_status_line() {
@@ -149,10 +170,24 @@ output_status_line() {
     # ansi color codes
     dim="\033[2m"
     cyan="\033[36m"
+    green="\033[32m"
+    light_green="\033[92m"
+    red="\033[31m"
     reset="\033[0m"
 
-    printf "${dim}%s%s${reset} @ ${cyan}📁%s/${reset}%s%s · %s\n" \
-        "${version_part}" "${model_part}" "${cwd}" "${style_part}" "${msg_part}"
+    # Build lines display format
+    lines_display=""
+    { [ "${has_lines}" = "true" ]; } && {
+        if [ -n "${lines_add_part}" ] && [ -n "${lines_rm_part}" ]; then
+            lines_display=$(printf " [%s%s%s/%s%s%s]" "${green}" "${lines_add_part}" "${reset}" "${red}" "${lines_rm_part}" "${reset}")
+        elif [ -n "${lines_add_part}" ]; then
+            lines_display=$(printf " [%s%s%s]" "${green}" "${lines_add_part}" "${reset}")
+        elif [ -n "${lines_rm_part}" ]; then
+            lines_display=$(printf " [%s%s%s]" "${red}" "${lines_rm_part}" "${reset}")
+        fi
+    }
+
+    printf "${dim}${version_part}${model_part}${reset} @ ${cyan}📁 ${cwd}/${reset}${style_part}${msg_part}${lines_display}${light_green}${cost_part}${reset}\\n"
 }
 
 main() {
