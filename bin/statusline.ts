@@ -103,22 +103,32 @@ const getDisplayPath = async (path: string): Promise<string> => {
 };
 
 /**
- * Count user messages in Claude Code transcript file
- *
- * Counts all messages with type "user" but excludes tool result messages
- * to get accurate count of actual user interactions.
- *
- * @param path - Path to transcript JSON file
- * @returns Promise resolving to number of user messages
+ * Count actual user messages in Claude Code transcript file
+ * @param path - Path to transcript JSONL file
+ * @returns Promise resolving to number of quota-relevant user messages
  */
 const countUserMessages = async (path: string): Promise<number> =>
   path
     ? safeRead(path).then((content) =>
-        Math.max(
-          0,
-          (content.match(/"type":"user"/g)?.length ?? 0) -
-            (content.match(/toolUseResult.*?"type":"user"/g)?.length ?? 0),
-        ),
+        content
+          .split("\n")
+          .filter((line) => line.trim())
+          .reduce((count, line) => {
+            try {
+              const entry = JSON.parse(line);
+              const msg = entry.message?.content || "";
+              return entry.type === "user" &&
+                !entry.toolUseResult &&
+                !entry.isMeta &&
+                !msg.includes("<command-name>") &&
+                !msg.includes("<local-command-stdout>") &&
+                !msg.includes("Caveat: The messages below")
+                ? count + 1
+                : count;
+            } catch {
+              return count;
+            }
+          }, 0),
       )
     : 0;
 
