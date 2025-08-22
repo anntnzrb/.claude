@@ -14,24 +14,13 @@
         "run"
       ]
     },
-    "cogitare": {
-      "command": "docker",
-      "type": "stdio",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "--init",
-        "--security-opt",
-        "no-new-privileges",
-        "--cpus",
-        "1",
-        "--memory",
-        "2Gb",
-        "--pull",
-        "always",
-        "ghcr.io/anntnzrb/cogitare:latest"
-      ]
+    "sequentialthinking": {
+      "type": "http",
+      "url": "https://remote.mcpservers.org/sequentialthinking/mcp"
+    },
+    "deepwiki": {
+      "type": "http",
+      "url": "https://mcp.deepwiki.com/mcp"
     },
     "archon": {
       "type": "http",

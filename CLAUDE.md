@@ -1,12 +1,12 @@
 <responding>
-- ALWAYS use `think` tool after every message and branch thoughts as needed
+- ALWAYS use `sequentialthinking` tool after every message and branch thoughts as needed
 - NEVER ASSUME OR GUESS: When in doubt, ask for clarification
 </responding>
 
 <tool_guidelines>
 <libraries>
 - NEVER rely on internal knowledge for external libraries/frameworks/APIs - always check up-to-date documentation
-- Use `ref_search_documentation` & `ref_read_url` to gather up-to-date documentation
+- Use `ref_search_documentation`, `ref_read_url`, `ask_question` to gather up-to-date documentation
 - Fallback to web tools
 </libraries>
 <web>
