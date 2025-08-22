@@ -9,6 +9,54 @@ import { homedir } from "os";
 import { basename } from "path";
 
 /**
+ * Domain model interfaces
+ */
+
+/** Claude model information */
+interface ModelInfo {
+  readonly id: string;
+  readonly display_name: string;
+}
+
+/** Workspace directory paths */
+interface WorkspaceInfo {
+  readonly current_dir: string;
+  readonly project_dir: string;
+}
+
+/** Output style configuration */
+interface OutputStyle {
+  readonly name: string;
+}
+
+/** Session cost and performance metrics */
+interface CostInfo {
+  readonly total_cost_usd: number;
+  readonly total_duration_ms: number;
+  readonly total_api_duration_ms: number;
+  readonly total_lines_added: number;
+  readonly total_lines_removed: number;
+}
+
+/** Complete Claude Code session data */
+interface StatusLineData {
+  readonly session_id: string;
+  readonly transcript_path: string;
+  readonly cwd: string;
+  readonly model: ModelInfo;
+  readonly workspace: WorkspaceInfo;
+  readonly version: string;
+  readonly output_style: OutputStyle;
+  readonly cost: CostInfo;
+  readonly exceeds_200k_tokens: boolean;
+}
+
+/** Extended data with computed fields */
+interface EnrichedStatusLineData extends StatusLineData {
+  readonly msgCount: number;
+}
+
+/**
  * ANSI color codes for terminal formatting
  * @readonly
  */
@@ -52,9 +100,9 @@ const safeRead = (path: string) =>
 /**
  * Parse JSON input string, filtering out comment lines starting with #
  * @param input - Raw JSON input string that may contain comments
- * @returns Parsed JSON object or empty object on parse error
+ * @returns Parsed StatusLineData or partial object on parse error
  */
-const parseInput = (input: string) => {
+const parseInput = (input: string): Partial<StatusLineData> => {
   try {
     return JSON.parse(input.replace(/^#.*/gm, ""));
   } catch {
@@ -137,10 +185,10 @@ const countUserMessages = async (path: string): Promise<number> =>
  *
  * Creates a comprehensive status display.
  *
- * @param data - Status data object containing model, cwd, costs, etc.
+ * @param data - Enriched status data with computed fields
  * @returns Formatted status line string with ANSI escape codes and newline
  */
-const buildStatusLine = (data: any) => {
+const buildStatusLine = (data: EnrichedStatusLineData) => {
   const model = data.model?.id?.replace(/^claude-/, "") ?? "Claude";
   const style =
     data.output_style?.name !== "default" && data.output_style?.name
@@ -149,20 +197,21 @@ const buildStatusLine = (data: any) => {
   const version = data.version ? `[v${data.version}] ` : "";
   const msgCount = data.msgCount > 0 ? ` 💬 ${data.msgCount}` : "";
   const cost =
-    data.cost?.total_cost_usd > 0
+    data.cost.total_cost_usd > 0
       ? ` 💰 $${data.cost.total_cost_usd.toFixed(2)}`
       : "";
+  const contextWarning = data.exceeds_200k_tokens ? " ⚠️ 200k+" : "";
 
   const lines = [
-    data.cost?.total_lines_added > 0 &&
+    data.cost.total_lines_added > 0 &&
       `${colors.green}+${data.cost.total_lines_added}${colors.reset}`,
-    data.cost?.total_lines_removed > 0 &&
+    data.cost.total_lines_removed > 0 &&
       `${colors.red}-${data.cost.total_lines_removed}${colors.reset}`,
   ].filter(Boolean);
 
   const linesStr = lines.length > 0 ? ` [${lines.join("/")}]` : "";
 
-  return `${colors.dim}${version}🧠 ${model}${colors.reset} @ ${colors.cyan}📁 ${data.cwd}/${colors.reset}${style}${msgCount}${linesStr}${colors.lightGreen}${cost}${colors.reset}\n`;
+  return `${colors.dim}${version}🧠 ${model}${colors.reset} @ ${colors.cyan}📁 ${data.cwd}/${colors.reset}${style}${msgCount}${linesStr}${colors.lightGreen}${cost}${colors.reset}${contextWarning}\n`;
 };
 
 /**
@@ -199,7 +248,7 @@ const main = () => {
         ),
         countUserMessages(data.transcript_path ?? ""),
       ]);
-      return { ...data, cwd, msgCount };
+      return { ...data, cwd, msgCount } as EnrichedStatusLineData;
     })
     .then(buildStatusLine)
     .then(process.stdout.write.bind(process.stdout));
