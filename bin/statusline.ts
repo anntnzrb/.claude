@@ -60,7 +60,7 @@ interface EnrichedStatusLineData extends StatusLineData {
  * Domain formatting utilities
  */
 const formatters = {
-  model: (model: ModelInfo) => model.id.replace(/^claude-/, "") || "Claude",
+  model: (model: ModelInfo) => model.display_name || "Claude",
   version: (version?: string) => (version ? `[v${version}] ` : ""),
   style: (style: OutputStyle) =>
     style.name !== "default" && style.name ? ` [${style.name}]` : "",
@@ -243,7 +243,7 @@ const buildStatusLine = (data: EnrichedStatusLineData) =>
     // Version and model
     `${colors.dim}${formatters.version(data.version)}🧠 ${formatters.model(data.model)}${colors.reset}`,
     // Directory
-    `@ ${colors.cyan}📁 ${data.cwd}/${colors.reset}`,
+    ` @ ${colors.cyan}📁 ${data.cwd}/${colors.reset} `,
     // Style
     formatters.style(data.output_style),
     // Message count
