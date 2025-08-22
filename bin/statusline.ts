@@ -63,6 +63,18 @@ const parseInput = (input: string) => {
 };
 
 /**
+ * Log session input to temporary file for debugging
+ * @param input - Raw input string to log
+ * @param sessionId - Session identifier from parsed data
+ * @returns Promise that resolves silently on success or failure
+ */
+const logSession = (input: string, sessionId: string = "unknown") =>
+  Bun.write(
+    `/tmp/claude-statusline-${sessionId}.json`,
+    `# JSON input captured on ${new Date().toISOString()}\n${input}\n`,
+  ).catch(() => {});
+
+/**
  * Get git-aware display path for current directory
  *
  * Attempts to show path relative to git repository root, falling back to
@@ -167,8 +179,10 @@ const main = () => {
   const [, , ...args] = process.argv;
 
   return readInput(args)
-    .then(parseInput)
-    .then(async (data) => {
+    .then(async (input) => {
+      const data = parseInput(input);
+      logSession(input, data.session_id);
+
       const [cwd, msgCount] = await Promise.all([
         getDisplayPath(
           data.workspace?.current_dir ?? data.cwd ?? process.cwd(),
