@@ -102,13 +102,14 @@ const safeRead = (path: string) =>
  * @param input - Raw JSON input string that may contain comments
  * @returns Parsed StatusLineData or partial object on parse error
  */
-const parseInput = (input: string): Partial<StatusLineData> => {
-  try {
-    return JSON.parse(input.replace(/^#.*/gm, ""));
-  } catch {
-    return {};
-  }
-};
+const parseInput = (input: string): Partial<StatusLineData> =>
+  (() => {
+    try {
+      return JSON.parse(input.replace(/^#.*/gm, ""));
+    } catch {
+      return {};
+    }
+  })();
 
 /**
  * Log session input to temporary file for debugging
@@ -134,85 +135,113 @@ const logSession = (input: string, sessionId: string = "unknown") =>
 const getDisplayPath = async (path: string): Promise<string> => {
   if (!path) return "";
 
-  try {
-    const { stdout } =
-      await Bun.$`cd ${path} && git rev-parse --show-toplevel 2>/dev/null`.quiet();
-    if (stdout.trim()) {
-      const repoRoot = stdout.trim();
-      const repoName = basename(repoRoot);
-      const relPath = path.replace(repoRoot, "").replace(/^\//, "") || ".";
-      return relPath === "." ? repoName : `${repoName}/${relPath}`;
-    }
-  } catch {}
+  // Try git-relative path first
+  const gitPath = await (async () => {
+    try {
+      const { stdout } =
+        await Bun.$`cd ${path} && git rev-parse --show-toplevel 2>/dev/null`.quiet();
+      if (stdout.trim()) {
+        const repoRoot = stdout.trim();
+        const relPath = path.replace(repoRoot, "").replace(/^\//, "") || ".";
+        return relPath === "."
+          ? basename(repoRoot)
+          : `${basename(repoRoot)}/${relPath}`;
+      }
+    } catch {}
+    return null;
+  })();
 
-  return path.startsWith(homedir())
-    ? path.replace(homedir(), "") || "~"
-    : path.split("/").slice(-2).join("/");
+  return (
+    gitPath ??
+    (path.startsWith(homedir())
+      ? path.replace(homedir(), "") || "~"
+      : path.split("/").slice(-2).join("/"))
+  );
+};
+
+/**
+ * Check if entry represents a quota-relevant user message
+ * @param line - JSONL line to parse and validate
+ * @returns True if entry is a user message that counts toward quota
+ */
+const isUserMessage = (line: string): boolean => {
+  try {
+    const entry = JSON.parse(line);
+    const msg = entry.message?.content || "";
+    return (
+      entry.type === "user" &&
+      !entry.toolUseResult &&
+      !entry.isMeta &&
+      ![
+        "<command-name>",
+        "<local-command-stdout>",
+        "Caveat: The messages below",
+      ].some((pattern) => msg.includes(pattern))
+    );
+  } catch {
+    return false;
+  }
 };
 
 /**
  * Count actual user messages in Claude Code transcript file
+ *
+ * Parses JSONL transcript and counts only messages that are relevant for quota tracking.
+ * Filters out tool results, meta messages, and system-generated content.
+ *
  * @param path - Path to transcript JSONL file
  * @returns Promise resolving to number of quota-relevant user messages
  */
 const countUserMessages = async (path: string): Promise<number> =>
   path
-    ? safeRead(path).then((content) =>
-        content
-          .split("\n")
-          .filter((line) => line.trim())
-          .reduce((count, line) => {
-            try {
-              const entry = JSON.parse(line);
-              const msg = entry.message?.content || "";
-              return entry.type === "user" &&
-                !entry.toolUseResult &&
-                !entry.isMeta &&
-                !msg.includes("<command-name>") &&
-                !msg.includes("<local-command-stdout>") &&
-                !msg.includes("Caveat: The messages below")
-                ? count + 1
-                : count;
-            } catch {
-              return count;
-            }
-          }, 0),
+    ? safeRead(path).then(
+        (content) =>
+          content
+            .split("\n")
+            .filter((line) => line.trim())
+            .filter(isUserMessage).length,
       )
     : 0;
 
 /**
  * Build formatted status line with ANSI colors and emojis
  *
- * Creates a comprehensive status display.
+ * Creates a comprehensive status display showing model info, directory, message count,
+ * code changes, cost information, and context warnings. Uses ANSI escape codes for
+ * colored terminal output.
  *
  * @param data - Enriched status data with computed fields
  * @returns Formatted status line string with ANSI escape codes and newline
  */
-const buildStatusLine = (data: EnrichedStatusLineData) => {
-  const model = data.model?.id?.replace(/^claude-/, "") ?? "Claude";
-  const style =
+const buildStatusLine = (data: EnrichedStatusLineData) =>
+  [
+    // Version and model
+    `${colors.dim}${data.version ? `[v${data.version}] ` : ""}🧠 ${data.model?.id?.replace(/^claude-/, "") ?? "Claude"}${colors.reset}`,
+    // Directory
+    `@ ${colors.cyan}📁 ${data.cwd}/${colors.reset}`,
+    // Style
     data.output_style?.name !== "default" && data.output_style?.name
       ? ` [${data.output_style.name}]`
-      : "";
-  const version = data.version ? `[v${data.version}] ` : "";
-  const msgCount = data.msgCount > 0 ? ` 💬 ${data.msgCount}` : "";
-  const cost =
-    data.cost.total_cost_usd > 0
-      ? ` 💰 $${data.cost.total_cost_usd.toFixed(2)}`
-      : "";
-  const contextWarning = data.exceeds_200k_tokens ? " ⚠️ 200k+" : "";
-
-  const lines = [
-    data.cost.total_lines_added > 0 &&
-      `${colors.green}+${data.cost.total_lines_added}${colors.reset}`,
-    data.cost.total_lines_removed > 0 &&
-      `${colors.red}-${data.cost.total_lines_removed}${colors.reset}`,
-  ].filter(Boolean);
-
-  const linesStr = lines.length > 0 ? ` [${lines.join("/")}]` : "";
-
-  return `${colors.dim}${version}🧠 ${model}${colors.reset} @ ${colors.cyan}📁 ${data.cwd}/${colors.reset}${style}${msgCount}${linesStr}${colors.lightGreen}${cost}${colors.reset}${contextWarning}\n`;
-};
+      : "",
+    // Message count
+    data.msgCount > 0 ? ` 💬 ${data.msgCount}` : "",
+    // Lines changed
+    (() => {
+      const lines = [
+        data.cost.total_lines_added > 0 &&
+          `${colors.green}+${data.cost.total_lines_added}${colors.reset}`,
+        data.cost.total_lines_removed > 0 &&
+          `${colors.red}-${data.cost.total_lines_removed}${colors.reset}`,
+      ]
+        .filter(Boolean)
+        .join("/");
+      return lines ? ` [${lines}]` : "";
+    })(),
+    // Cost
+    `${colors.lightGreen}${data.cost.total_cost_usd > 0 ? ` 💰 $${data.cost.total_cost_usd.toFixed(2)}` : ""}${colors.reset}`,
+    // Context warning
+    data.exceeds_200k_tokens ? " ⚠️ 200k+" : "",
+  ].join("") + "\n";
 
 /**
  * Read JSON input from file argument or stdin
@@ -220,7 +249,29 @@ const buildStatusLine = (data: EnrichedStatusLineData) => {
  * @returns Promise resolving to input text content
  */
 const readInput = (args: string[]) =>
-  args.length > 0 ? Bun.file(args[0]).text() : new Response(Bun.stdin).text();
+  args[0] ? Bun.file(args[0]).text() : new Response(Bun.stdin).text();
+
+/**
+ * Enrich parsed data with computed fields
+ *
+ * Takes parsed session data and enriches it with computed display path and message count.
+ * Concurrently fetches git-aware directory path and counts quota-relevant user messages.
+ *
+ * @param data - Parsed status line data from JSON input
+ * @param input - Raw input string for debugging/logging purposes
+ * @returns Promise resolving to enriched data with computed fields
+ */
+const enrichData = async (
+  data: Partial<StatusLineData>,
+  input: string,
+): Promise<EnrichedStatusLineData> => {
+  logSession(input, data.session_id);
+  const [cwd, msgCount] = await Promise.all([
+    getDisplayPath(data.workspace?.current_dir ?? data.cwd ?? process.cwd()),
+    countUserMessages(data.transcript_path ?? ""),
+  ]);
+  return { ...data, cwd, msgCount } as EnrichedStatusLineData;
+};
 
 /**
  * Main statusline generation pipeline
@@ -234,24 +285,10 @@ const readInput = (args: string[]) =>
  *
  * @returns Promise that resolves when status line is written to stdout
  */
-const main = () => {
-  const [, , ...args] = process.argv;
-
-  return readInput(args)
-    .then(async (input) => {
-      const data = parseInput(input);
-      logSession(input, data.session_id);
-
-      const [cwd, msgCount] = await Promise.all([
-        getDisplayPath(
-          data.workspace?.current_dir ?? data.cwd ?? process.cwd(),
-        ),
-        countUserMessages(data.transcript_path ?? ""),
-      ]);
-      return { ...data, cwd, msgCount } as EnrichedStatusLineData;
-    })
+const main = () =>
+  readInput(process.argv.slice(2))
+    .then((input) => enrichData(parseInput(input), input))
     .then(buildStatusLine)
     .then(process.stdout.write.bind(process.stdout));
-};
 
 main().catch(die);
