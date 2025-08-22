@@ -57,9 +57,7 @@
       "mcp__MCP_DOCKER__tavily-map",
       "mcp__MCP_DOCKER__tavily-search",
       "mcp__MCP_DOCKER__web_search_exa",
-      "mcp__cogitare__think",
-      "mcp__semgrep",
-      "mcp__serena"
+      "mcp__cogitare__think"
     ],
     "deny": []
   },

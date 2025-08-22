@@ -36,24 +36,6 @@
     "archon": {
       "type": "http",
       "url": "http://localhost:8051/mcp"
-    },
-     "serena": {
-       "type": "stdio",
-       "command": "uvx",
-       "args": [
-         "--from",
-         "git+https://github.com/oraios/serena",
-         "serena-mcp-server",
-         "--context",
-         "ide-assistant",
-         "--mode",
-         "interactive",
-         "editing",
-         "--enable-web-dashboard",
-         "false",
-         "--enable-gui-log-window",
-         "false"
-       ]
-     }
+    }
   }
 }

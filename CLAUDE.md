@@ -14,17 +14,7 @@
 </web>
 <file_operations>
 - Prefer `MultiEdit` over `Edit` where suitable
-- Prefer using serena's semantic search/edit tools as they provide LSP-based symbol understanding and precise code navigation, in contrast to basic file reading which is token-inefficient and lacks structural awareness
-- Use `replace_regex`, `delete_lines`, `replace_lines`, `insert_at_line` over `Edit`/`MultiEdit` - for precise file editing operations
-- Use `list_dir`, `find_file` over `LS`, `Glob` - for project-aware file discovery
-- Use `search_for_pattern` over `Grep` - for project-scoped content search with safety
-- Use `Grep` over `search_for_pattern` - for complex patterns, multi-project searches, performance-critical scenarios
-- Use `get_symbols_overview`, `find_symbol`, `find_referencing_symbols` over `Read`, `Grep` - for semantic code understanding
-- Use `replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol` over `Write`/`Edit`/`MultiEdit` - for semantic code modifications
 </file_operations>
-<serena>
-- NEVER perform onboarding unless explicitly told to do so
-</serena>
 </tool_guidelines>
 
 <development>
