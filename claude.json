@@ -14,9 +14,9 @@
         "run"
       ]
     },
-    "sequential-thinking": {
-      "type": "stdio",
+    "cogitare": {
       "command": "docker",
+      "type": "stdio",
       "args": [
         "run",
         "--rm",
@@ -28,16 +28,9 @@
         "1",
         "--memory",
         "2Gb",
-        "techgopal/ultrafast-mcp-sequential-thinking:latest",
-        "sequential-thinking-server",
-        "--transport",
-        "stdio",
-        "--port",
-        "50101",
-        "--max-thoughts",
-        "200",
-        "--max-branches",
-        "50"
+        "--pull",
+        "always",
+        "ghcr.io/anntnzrb/cogitare:latest"
       ]
     },
     "archon": {
