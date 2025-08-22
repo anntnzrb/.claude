@@ -57,6 +57,31 @@ interface EnrichedStatusLineData extends StatusLineData {
 }
 
 /**
+ * Domain formatting utilities
+ */
+const formatters = {
+  model: (model: ModelInfo) => model.id.replace(/^claude-/, "") || "Claude",
+  version: (version?: string) => (version ? `[v${version}] ` : ""),
+  style: (style: OutputStyle) =>
+    style.name !== "default" && style.name ? ` [${style.name}]` : "",
+  cost: (cost: CostInfo) =>
+    cost.total_cost_usd > 0 ? ` 💰 $${cost.total_cost_usd.toFixed(2)}` : "",
+  lines: (cost: CostInfo) => {
+    const lines = [
+      cost.total_lines_added > 0 &&
+        `${colors.green}+${cost.total_lines_added}${colors.reset}`,
+      cost.total_lines_removed > 0 &&
+        `${colors.red}-${cost.total_lines_removed}${colors.reset}`,
+    ]
+      .filter(Boolean)
+      .join("/");
+    return lines ? ` [${lines}]` : "";
+  },
+  contextWarning: (exceeds200k: boolean) => (exceeds200k ? " ⚠️ 200k+" : ""),
+  messageCount: (count: number) => (count > 0 ? ` 💬 ${count}` : ""),
+} as const;
+
+/**
  * ANSI color codes for terminal formatting
  * @readonly
  */
@@ -207,8 +232,8 @@ const countUserMessages = async (path: string): Promise<number> =>
  * Build formatted status line with ANSI colors and emojis
  *
  * Creates a comprehensive status display showing model info, directory, message count,
- * code changes, cost information, and context warnings. Uses ANSI escape codes for
- * colored terminal output.
+ * code changes, cost information, and context warnings. Uses organized formatters
+ * for consistent presentation across all status components.
  *
  * @param data - Enriched status data with computed fields
  * @returns Formatted status line string with ANSI escape codes and newline
@@ -216,31 +241,19 @@ const countUserMessages = async (path: string): Promise<number> =>
 const buildStatusLine = (data: EnrichedStatusLineData) =>
   [
     // Version and model
-    `${colors.dim}${data.version ? `[v${data.version}] ` : ""}🧠 ${data.model?.id?.replace(/^claude-/, "") ?? "Claude"}${colors.reset}`,
+    `${colors.dim}${formatters.version(data.version)}🧠 ${formatters.model(data.model)}${colors.reset}`,
     // Directory
     `@ ${colors.cyan}📁 ${data.cwd}/${colors.reset}`,
     // Style
-    data.output_style?.name !== "default" && data.output_style?.name
-      ? ` [${data.output_style.name}]`
-      : "",
+    formatters.style(data.output_style),
     // Message count
-    data.msgCount > 0 ? ` 💬 ${data.msgCount}` : "",
+    formatters.messageCount(data.msgCount),
     // Lines changed
-    (() => {
-      const lines = [
-        data.cost.total_lines_added > 0 &&
-          `${colors.green}+${data.cost.total_lines_added}${colors.reset}`,
-        data.cost.total_lines_removed > 0 &&
-          `${colors.red}-${data.cost.total_lines_removed}${colors.reset}`,
-      ]
-        .filter(Boolean)
-        .join("/");
-      return lines ? ` [${lines}]` : "";
-    })(),
+    formatters.lines(data.cost),
     // Cost
-    `${colors.lightGreen}${data.cost.total_cost_usd > 0 ? ` 💰 $${data.cost.total_cost_usd.toFixed(2)}` : ""}${colors.reset}`,
+    `${colors.lightGreen}${formatters.cost(data.cost)}${colors.reset}`,
     // Context warning
-    data.exceeds_200k_tokens ? " ⚠️ 200k+" : "",
+    formatters.contextWarning(data.exceeds_200k_tokens),
   ].join("") + "\n";
 
 /**
