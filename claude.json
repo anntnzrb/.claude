@@ -14,6 +14,10 @@
         "run"
       ]
     },
+    "context7": {
+      "type": "sse",
+      "url": "https://mcp.context7.com/sse"
+    },
     "sequentialthinking": {
       "type": "http",
       "url": "https://remote.mcpservers.org/sequentialthinking/mcp"
