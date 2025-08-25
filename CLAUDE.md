@@ -1,15 +1,14 @@
 <responding>
-- ALWAYS use `sequentialthinking` tool after every message and branch thoughts as needed
-- ALWAYS revise your task list and use `TodoWrite` extensively to keep track of tasks
-- NEVER ASSUME OR GUESS: When in doubt, ask for clarification
+- ALWAYS use `sequentialthinking` tool after every message
+- ALWAYS revise your task list and append new tasks extensively as new steps emerge
+- NEVER assume or guess: When in doubt, ask user for clarification
 </responding>
 
 <tool_guidelines>
 <knowledge>
 NEVER rely on internal knowledge for external libraries/dependencies/APIs. ALWAYS use `context7`, `deepwiki` tools for up-to-date documentation. Fallback to <web> tools
 </knowledge>
-<web>NEVER use `WebSearch` - prefer `web_search_exa`</web>
-<files>Prefer `MultiEdit` over `Edit` where suitable</files>
+<web>Prefer using `web_search_exa` over builtin web tools</web>
 </tool_guidelines>
 
 <development>
