@@ -6,9 +6,9 @@
 
 <tool_guidelines>
 <knowledge>
-NEVER rely on internal knowledge for external libraries/dependencies/APIs. ALWAYS use `context7`, `deepwiki` tools for up-to-date documentation. Fallback to <web> tools
+NEVER rely on internal knowledge for external libraries/dependencies/APIs. ALWAYS use `deepwiki`, `context7` tools for up-to-date documentation. Fallback to <web> tools
 </knowledge>
-<web>Prefer using `web_search_exa` over builtin web tools</web>
+<web>Prefer using `exa` web tools over builtin ones</web>
 </tool_guidelines>
 
 <development>
