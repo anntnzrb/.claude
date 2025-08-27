@@ -121,7 +121,6 @@ const claudeCmd = [
   "x",
   "--bun",
   "@anthropic-ai/claude-code@latest",
-  "--dangerously-skip-permissions",
 ] as const;
 
 /** ***
