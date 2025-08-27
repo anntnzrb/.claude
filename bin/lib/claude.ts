@@ -4,11 +4,11 @@
  * Claude Code execution and configuration management script
  *
  * This script performs the following:
- * 1. Merges local project configurations into the global Claude configuration
+ * 1. Merges global configurations into the final Claude configuration
  * 2. Executes Claude Code using Bun with proper environment setup
  *
- * The configuration merge allows defining Claude settings (such as MCP servers
- * amongst others) in a local claude.json file, which are then merged into the
+ * The configuration merge allows defining Claude settings and MCP servers
+ * in separate claude.json and mcp.json files, which are then merged into the
  * global ~/.claude.json configuration before Claude Code is launched.
  */
 
@@ -51,9 +51,11 @@ const safeJson = (path: string) =>
  * @readonly
  */
 const paths = {
-  /** Project-local configuration file path */
-  local: join(homedir(), ".claude", "claude.json"),
   /** Global Claude configuration file path */
+  claude: join(homedir(), ".claude", "claude.json"),
+  /** Global MCP servers configuration file path */
+  mcp: join(homedir(), ".claude", "mcp.json"),
+  /** Final merged global configuration file path */
   global: join(homedir(), ".claude.json"),
 };
 
@@ -95,13 +97,13 @@ const claudeCmd = [
  * *** **/
 
 /**
- * Merge local project configs into global configuration
+ * Merge global configs into final global configuration
  * @returns Promise that resolves when merge is complete or skipped
  */
 const mergeConfigs = () =>
-  (existsSync(paths.local) &&
-    Promise.all([safeJson(paths.global), safeJson(paths.local)])
-      .then(([global, local]) => ({ ...global, ...local }))
+  ((existsSync(paths.claude) || existsSync(paths.mcp)) &&
+    Promise.all([safeJson(paths.global), safeJson(paths.claude), safeJson(paths.mcp)])
+      .then(([global, claude, mcp]) => ({ ...global, ...claude, ...mcp }))
       .then((merged) =>
         Bun.write(paths.global, JSON.stringify(merged, null, 2)),
       )
@@ -109,7 +111,7 @@ const mergeConfigs = () =>
   Promise.resolve();
 
 /**
- * Create environment object with Claude variables and development flags removed
+ * Create environment object with Claude variables and development flags
  * @returns Environment object for Claude Code execution
  */
 const setupEnv = () => ({ ...process.env, ...claudeEnv });
@@ -119,7 +121,7 @@ const setupEnv = () => ({ ...process.env, ...claudeEnv });
  * @param args - Command line arguments to pass to Claude Code
  * @returns Function that takes environment and spawns Claude process
  */
-const spawnClaude = (args: string[]) => (env: Record<string, any>) =>
+const spawnClaude = (args: string[]) => (env: Record<string, string | number>) =>
   Bun.spawn([...claudeCmd, ...args], {
     env,
     stdio: ["inherit", "inherit", "inherit"],
