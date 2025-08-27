@@ -17,6 +17,29 @@ import { homedir } from "os";
 import { join } from "path";
 
 /** ***
+ * Types
+ * *** **/
+
+/**
+ * MCP server configuration with connection details
+ */
+interface McpServer {
+  name: string;
+  command?: string;
+  url?: string;
+}
+
+/**
+ * Map of server names to their configurations
+ */
+type McpServersMap = Record<string, Omit<McpServer, "name">>;
+
+/**
+ * Environment variables configuration
+ */
+type EnvironmentConfig = Record<string, string | number>;
+
+/** ***
  * Core utilities
  * *** **/
 
@@ -35,12 +58,12 @@ const die = (msg: string): never => (
  * @param path - File system path to JSON file
  * @returns Promise resolving to parsed JSON object or empty object on error
  */
-const safeJson = (path: string) =>
+const safeJson = (path: string): Promise<unknown> =>
   existsSync(path)
     ? Bun.file(path)
         .json()
         .catch(() => ({}))
-    : {};
+    : Promise.resolve({});
 
 /** ***
  * Configuration constants
@@ -63,7 +86,7 @@ const paths = {
  * Environment variables to disable non-essential Claude features
  * @readonly
  */
-const claudeEnv: Record<string, string | number> = {
+const claudeEnv: EnvironmentConfig = {
   CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR: 1,
   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
   DEV: 1,
@@ -97,16 +120,52 @@ const claudeCmd = [
  * *** **/
 
 /**
+ * Build mcpServers object from array of server configurations
+ *
+ * Transforms user-friendly config format to Claude's expected format:
+ * - If has `command`: splits "docker mcp run" → command: "docker", args: ["mcp", "run"], type: "stdio"
+ * - If has `url`: passes through as type: "http" server
+ *
+ * @param mcpArray - Array of MCP server configurations
+ * @returns Object with server names as keys and configs as values
+ */
+const buildMcpServers = (mcpArray: McpServer[]): McpServersMap =>
+  mcpArray.reduce((acc, { name, command, url, ...rest }) => {
+    const parts = command?.split(" ") || [];
+    return {
+      ...acc,
+      [name]: {
+        ...rest,
+        ...(command && {
+          type: "stdio",
+          command: parts[0], // first part is the command
+          args: parts.slice(1), // all arguments after the command
+        }),
+        ...(url && { type: "http", url }),
+      },
+    };
+  }, {});
+
+/**
  * Merge global configs into final global configuration
  * @returns Promise that resolves when merge is complete or skipped
  */
-const mergeConfigs = () =>
+const mergeConfigs = (): Promise<void> =>
   ((existsSync(paths.claude) || existsSync(paths.mcp)) &&
-    Promise.all([safeJson(paths.global), safeJson(paths.claude), safeJson(paths.mcp)])
-      .then(([global, claude, mcp]) => ({ ...global, ...claude, ...mcp }))
+    Promise.all([
+      safeJson(paths.global),
+      safeJson(paths.claude),
+      safeJson(paths.mcp),
+    ])
+      .then(([global, claude, mcpArray]) => ({
+        ...global,
+        ...claude,
+        mcpServers: buildMcpServers(mcpArray as McpServer[]),
+      }))
       .then((merged) =>
         Bun.write(paths.global, JSON.stringify(merged, null, 2)),
       )
+      .then(() => {})
       .catch((err) => console.warn(`Config merge failed: ${err}`))) ||
   Promise.resolve();
 
@@ -114,14 +173,14 @@ const mergeConfigs = () =>
  * Create environment object with Claude variables and development flags
  * @returns Environment object for Claude Code execution
  */
-const setupEnv = () => ({ ...process.env, ...claudeEnv });
+const setupEnv = (): EnvironmentConfig => ({ ...process.env, ...claudeEnv });
 
 /**
  * Spawn Claude with provided arguments
  * @param args - Command line arguments to pass to Claude Code
  * @returns Function that takes environment and spawns Claude process
  */
-const spawnClaude = (args: string[]) => (env: Record<string, string | number>) =>
+const spawnClaude = (args: string[]) => (env: EnvironmentConfig) =>
   Bun.spawn([...claudeCmd, ...args], {
     env,
     stdio: ["inherit", "inherit", "inherit"],
