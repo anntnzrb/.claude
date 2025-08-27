@@ -164,10 +164,12 @@ const logSession = (input: string, sessionId: string = "unknown") =>
  * Attempts to show path relative to git repository root, falling back to
  * home-relative path or truncated path for non-git directories.
  *
- * @param path - Full directory path to format
+ * @param workspace - Workspace info with current_dir
+ * @param cwd - Current working directory fallback
  * @returns Formatted display path (e.g., "repo/subdir", "~/path", or "parent/dir")
  */
-const getDisplayPath = async (path: string): Promise<string> => {
+const getDisplayPath = async (workspace?: WorkspaceInfo, cwd?: string): Promise<string> => {
+  const path = workspace?.current_dir || cwd || process.cwd();
   if (!path) return "";
 
   // Try git-relative path first
@@ -293,7 +295,7 @@ const buildStatusLine = (data: EnrichedStatusLineData) =>
     // Version and model
     `${colors.dim}${formatters.version(data.version)}🧠 ${formatters.model(data.model)}${colors.reset}`,
     // Directory
-    ` @ ${colors.cyan}📁 ${data.cwd}/${colors.reset} `,
+    ` @ ${colors.cyan}📁 ${data.cwd}${colors.reset}`,
     // Style
     formatters.style(data.output_style),
     // Message count
@@ -332,9 +334,9 @@ const enrichData = async (
 ): Promise<EnrichedStatusLineData> => {
   logSession(input, data.session_id);
   const [cwd, msgCount, tokenMetrics] = await Promise.all([
-    getDisplayPath(data.workspace?.current_dir || data.cwd || process.cwd()),
-    countUserMessages(data.transcript_path || ""),
-    getTokenMetrics(data.transcript_path || ""),
+    getDisplayPath(data.workspace, data.cwd),
+    countUserMessages(data.transcript_path),
+    getTokenMetrics(data.transcript_path),
   ]);
   return { ...data, cwd, msgCount, tokenMetrics } as EnrichedStatusLineData;
 };
