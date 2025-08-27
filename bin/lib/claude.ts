@@ -71,16 +71,24 @@ const safeJson = (path: string): Promise<unknown> =>
  * *** **/
 
 /**
+ * Claude home directory path
+ * @readonly
+ */
+const CLAUDE_HOME = join(homedir(), ".claude");
+
+/**
  * File system paths for Claude configuration files
  * @readonly
  */
 const paths = {
   /** Global Claude configuration file path */
-  claude: join(homedir(), ".claude", "claude.json"),
+  claude: join(CLAUDE_HOME, "claude.json"),
   /** Global MCP servers configuration file path */
-  mcp: join(homedir(), ".claude", "mcp.json"),
+  mcp: join(CLAUDE_HOME, "mcp.json"),
   /** Final merged global configuration file path */
   global: join(homedir(), ".claude.json"),
+  /** Auto Plan Mode system prompt file path */
+  autoPlanMode: join(CLAUDE_HOME, "bin", "lib", "auto-plan-mode.md"),
 };
 
 /**
@@ -183,11 +191,15 @@ const setupEnv = (): EnvironmentConfig => ({ ...process.env, ...claudeEnv });
  * @param args - Command line arguments to pass to Claude Code
  * @returns Function that takes environment and spawns Claude process
  */
-const spawnClaude = (args: string[]) => (env: EnvironmentConfig) =>
-  Bun.spawn([...claudeCmd, ...args], {
+const spawnClaude = (args: string[]) => async (env: EnvironmentConfig) => {
+  const prompt = await Bun.file(paths.autoPlanMode).text();
+  const claudeArgs = [...args, "--append-system-prompt", prompt];
+
+  return Bun.spawn([...claudeCmd, ...claudeArgs], {
     env,
     stdio: ["inherit", "inherit", "inherit"],
   });
+};
 
 /** ***
  * Main
@@ -197,7 +209,7 @@ const [, , ...args] = process.argv;
 
 mergeConfigs()
   .then(() => setupEnv())
-  .then(spawnClaude(args))
+  .then(async (env) => spawnClaude(args)(env))
   .then((proc) => proc.exited)
   .then(process.exit)
   .catch(die);
