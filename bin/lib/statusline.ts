@@ -38,6 +38,11 @@ interface CostInfo {
   readonly total_lines_removed: number;
 }
 
+/** Token context metrics */
+interface TokenMetrics {
+  readonly contextLength: number;
+}
+
 /** Complete Claude Code session data */
 interface StatusLineData {
   readonly session_id: string;
@@ -54,6 +59,7 @@ interface StatusLineData {
 /** Extended data with computed fields */
 interface EnrichedStatusLineData extends StatusLineData {
   readonly msgCount: number;
+  readonly tokenMetrics: TokenMetrics;
 }
 
 /**
@@ -79,6 +85,10 @@ const formatters = {
   },
   contextWarning: (exceeds200k: boolean) => (exceeds200k ? " ⚠️ 200k+" : ""),
   messageCount: (count: number) => (count > 0 ? ` 💬 ${count}` : ""),
+  contextLength: (tokens: TokenMetrics) =>
+    tokens.contextLength > 0
+      ? ` 💾 ${Math.round(tokens.contextLength / 1000)}k`
+      : "",
 } as const;
 
 /**
@@ -229,6 +239,46 @@ const countUserMessages = async (path: string): Promise<number> =>
     : 0;
 
 /**
+ * Get token metrics from Claude Code transcript file
+ *
+ * Parses JSONL transcript to find the most recent main chain message
+ * and returns token metrics including context length.
+ *
+ * @param path - Path to transcript JSONL file
+ * @returns Promise resolving to token metrics
+ */
+const getTokenMetrics = async (path: string): Promise<TokenMetrics> =>
+  path
+    ? safeRead(path)
+        .then((content) =>
+          content
+            .split("\n")
+            .filter((line) => line.trim() && line.startsWith("{"))
+            .flatMap((line) => {
+              const data = JSON.parse(line);
+              return data.message?.usage &&
+                data.isSidechain !== true &&
+                data.timestamp
+                ? [data]
+                : [];
+            })
+            .sort(
+              (a, b) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime(),
+            )
+            .at(-1),
+        )
+        .then((entry) => ({
+          contextLength: entry?.message?.usage
+            ? (entry.message.usage.input_tokens || 0) +
+              (entry.message.usage.cache_read_input_tokens || 0) +
+              (entry.message.usage.cache_creation_input_tokens || 0)
+            : 0,
+        }))
+    : Promise.resolve({ contextLength: 0 });
+
+/**
  * Build formatted status line with ANSI colors and emojis
  *
  * Creates a comprehensive status display showing model info, directory, message count,
@@ -248,6 +298,8 @@ const buildStatusLine = (data: EnrichedStatusLineData) =>
     formatters.style(data.output_style),
     // Message count
     formatters.messageCount(data.msgCount),
+    // Context length
+    formatters.contextLength(data.tokenMetrics),
     // Lines changed
     formatters.lines(data.cost),
     // Cost
@@ -267,8 +319,8 @@ const readInput = (args: string[]) =>
 /**
  * Enrich parsed data with computed fields
  *
- * Takes parsed session data and enriches it with computed display path and message count.
- * Concurrently fetches git-aware directory path and counts quota-relevant user messages.
+ * Takes parsed session data and enriches it with computed display path, message count, and token metrics.
+ * Concurrently fetches git-aware directory path, counts quota-relevant user messages, and gets token metrics.
  *
  * @param data - Parsed status line data from JSON input
  * @param input - Raw input string for debugging/logging purposes
@@ -279,11 +331,12 @@ const enrichData = async (
   input: string,
 ): Promise<EnrichedStatusLineData> => {
   logSession(input, data.session_id);
-  const [cwd, msgCount] = await Promise.all([
-    getDisplayPath(data.workspace?.current_dir ?? data.cwd ?? process.cwd()),
-    countUserMessages(data.transcript_path ?? ""),
+  const [cwd, msgCount, tokenMetrics] = await Promise.all([
+    getDisplayPath(data.workspace?.current_dir || data.cwd || process.cwd()),
+    countUserMessages(data.transcript_path || ""),
+    getTokenMetrics(data.transcript_path || ""),
   ]);
-  return { ...data, cwd, msgCount } as EnrichedStatusLineData;
+  return { ...data, cwd, msgCount, tokenMetrics } as EnrichedStatusLineData;
 };
 
 /**
