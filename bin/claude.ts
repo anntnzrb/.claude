@@ -61,12 +61,22 @@ const paths = {
  * Environment variables to disable non-essential Claude features
  * @readonly
  */
-const claudeEnv = {
-  DISABLE_AUTOUPDATER: "1",
-  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
-  DISABLE_NON_ESSENTIAL_MODEL_CALLS: "1",
-  DISABLE_TELEMETRY: "1",
-} as const;
+const claudeEnv: Record<string, string | number> = {
+  CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR: 1,
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
+  DEV: 1,
+  DISABLE_AUTOUPDATER: 1,
+  DISABLE_BUG_COMMAND: 1,
+  DISABLE_DOCTOR_COMMAND: 1,
+  DISABLE_INSTALL_GITHUB_APP_COMMAND: 1,
+  DISABLE_LOGIN_COMMAND: 1,
+  DISABLE_LOGOUT_COMMAND: 1,
+  DISABLE_MIGRATE_INSTALLER_COMMAND: 1,
+  DISABLE_NON_ESSENTIAL_MODEL_CALLS: 1,
+  DISABLE_TELEMETRY: 1,
+  DISABLE_UPGRADE_COMMAND: 1,
+  USE_BUILTIN_RIPGREP: 1
+};
 
 /**
  * Claude Code execution command components
@@ -102,7 +112,7 @@ const mergeConfigs = () =>
  * Create environment object with Claude variables and development flags removed
  * @returns Environment object for Claude Code execution
  */
-const setupEnv = () => ({ ...process.env, ...claudeEnv, DEV: undefined });
+const setupEnv = () => ({ ...process.env, ...claudeEnv });
 
 /**
  * Spawn Claude with provided arguments
