@@ -34,8 +34,6 @@ interface CostInfo {
   readonly total_cost_usd: number;
   readonly total_duration_ms: number;
   readonly total_api_duration_ms: number;
-  readonly total_lines_added: number;
-  readonly total_lines_removed: number;
 }
 
 /** Token context metrics */
@@ -72,17 +70,6 @@ const formatters = {
     style.name !== "default" && style.name ? ` [${style.name}]` : "",
   cost: (cost: CostInfo) =>
     cost.total_cost_usd > 0 ? ` 💰 $${cost.total_cost_usd.toFixed(2)}` : "",
-  lines: (cost: CostInfo) => {
-    const lines = [
-      cost.total_lines_added > 0 &&
-        `${colors.green}+${cost.total_lines_added}${colors.reset}`,
-      cost.total_lines_removed > 0 &&
-        `${colors.red}-${cost.total_lines_removed}${colors.reset}`,
-    ]
-      .filter(Boolean)
-      .join("/");
-    return lines ? ` [${lines}]` : "";
-  },
   contextWarning: (exceeds200k: boolean) => (exceeds200k ? " ⚠️ 200k+" : ""),
   messageCount: (count: number) => (count > 0 ? ` 💬 ${count}` : ""),
   contextLength: (tokens: TokenMetrics) =>
@@ -100,11 +87,11 @@ const colors = {
   dim: "\x1b[2m",
   /** Cyan color for directory paths */
   cyan: "\x1b[36m",
-  /** Green color for added lines */
+  /** Green color */
   green: "\x1b[32m",
   /** Light green color for cost display */
   lightGreen: "\x1b[92m",
-  /** Red color for removed lines */
+  /** Red color */
   red: "\x1b[31m",
   /** Reset all formatting */
   reset: "\x1b[0m",
@@ -302,8 +289,6 @@ const buildStatusLine = (data: EnrichedStatusLineData) =>
     formatters.messageCount(data.msgCount),
     // Context length
     formatters.contextLength(data.tokenMetrics),
-    // Lines changed
-    formatters.lines(data.cost),
     // Cost
     `${colors.lightGreen}${formatters.cost(data.cost)}${colors.reset}`,
     // Context warning
