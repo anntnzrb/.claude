@@ -36,7 +36,11 @@
       "Bash(timeout:*)",
       "Bash(uvx ruff:*)",
       "Bash(wc:*)",
-      "WebFetch"
+      "WebFetch",
+      "mcp__MCP_DOCKER",
+      "mcp__sequentialthinking",
+      "mcp__deepwiki",
+      "mcp__archon"
     ],
     "deny": []
   },
