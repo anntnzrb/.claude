@@ -177,7 +177,7 @@ const getDisplayPath = async (path: string): Promise<string> => {
   })();
 
   return (
-    gitPath ??
+    gitPath ||
     (path.startsWith(homedir())
       ? path.replace(homedir(), "") || "~"
       : path.split("/").slice(-2).join("/"))
