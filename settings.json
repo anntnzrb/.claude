@@ -43,6 +43,6 @@
   "model": "opusplan",
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/bin/statusline.ts"
+    "command": "~/.claude/bin/lib/statusline.ts"
   }
 }

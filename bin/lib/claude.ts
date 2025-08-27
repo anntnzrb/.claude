@@ -75,7 +75,7 @@ const claudeEnv: Record<string, string | number> = {
   DISABLE_NON_ESSENTIAL_MODEL_CALLS: 1,
   DISABLE_TELEMETRY: 1,
   DISABLE_UPGRADE_COMMAND: 1,
-  USE_BUILTIN_RIPGREP: 1
+  USE_BUILTIN_RIPGREP: 1,
 };
 
 /**

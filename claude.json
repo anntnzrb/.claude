@@ -6,7 +6,7 @@
   "defaultOutputStyle": "bro",
   "mcpServers": {
     "MCP_DOCKER": {
-      "command": "docker",
+      "command": "docker.exe",
       "type": "stdio",
       "args": [
         "mcp",

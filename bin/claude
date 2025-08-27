@@ -3,4 +3,4 @@
 # Claude Code wrapper
 # This script calls the TypeScript implementation with all arguments passed through
 
-exec "${0%/*}/claude.ts" "${@}"
+exec "${0%/*}/lib/claude.ts" "${@}"
