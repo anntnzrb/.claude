@@ -65,16 +65,16 @@ interface EnrichedStatusLineData extends StatusLineData {
  */
 const formatters = {
   model: (model: ModelInfo) => model.display_name || "Claude",
-  version: (version?: string) => (version ? `[v${version}] ` : ""),
+  version: (version?: string) => (version ? `[v${version}]` : ""),
   style: (style: OutputStyle) =>
-    style.name !== "default" && style.name ? ` [${style.name}]` : "",
+    style.name === "default" ? "🗣️ [Def]" : `🗣️ [${style.name}]`,
   cost: (cost: CostInfo) =>
-    cost.total_cost_usd > 0 ? ` 💰 $${cost.total_cost_usd.toFixed(2)}` : "",
-  contextWarning: (exceeds200k: boolean) => (exceeds200k ? " ⚠️ 200k+" : ""),
-  messageCount: (count: number) => (count > 0 ? ` 💬 ${count}` : ""),
+    cost.total_cost_usd > 0 ? `💰 $${cost.total_cost_usd.toFixed(2)}` : "",
+  contextWarning: (exceeds200k: boolean) => (exceeds200k ? "⚠️ 200k+" : ""),
+  messageCount: (count: number) => (count > 0 ? `💬 ${count}` : ""),
   contextLength: (tokens: TokenMetrics) =>
     tokens.contextLength > 0
-      ? ` 💾 ${Math.round(tokens.contextLength / 1000)}k`
+      ? `💾 ${Math.round(tokens.contextLength / 1000)}k`
       : "",
 } as const;
 
@@ -155,7 +155,10 @@ const logSession = (input: string, sessionId: string = "unknown") =>
  * @param cwd - Current working directory fallback
  * @returns Formatted display path (e.g., "repo/subdir", "~/path", or "parent/dir")
  */
-const getDisplayPath = async (workspace?: WorkspaceInfo, cwd?: string): Promise<string> => {
+const getDisplayPath = async (
+  workspace?: WorkspaceInfo,
+  cwd?: string,
+): Promise<string> => {
   const path = workspace?.current_dir || cwd || process.cwd();
   if (!path) return "";
 
@@ -279,12 +282,14 @@ const getTokenMetrics = async (path: string): Promise<TokenMetrics> =>
  */
 const buildStatusLine = (data: EnrichedStatusLineData) =>
   [
-    // Version and model
-    `${colors.dim}${formatters.version(data.version)}🧠 ${formatters.model(data.model)}${colors.reset}`,
-    // Directory
-    ` @ ${colors.cyan}📁 ${data.cwd}${colors.reset}`,
+    // Version
+    `${colors.dim}${formatters.version(data.version)}${colors.reset}`,
+    // Model
+    `🧠 ${formatters.model(data.model)}`,
     // Style
     formatters.style(data.output_style),
+    // Directory
+    `@ ${colors.cyan}📁 ${data.cwd}${colors.reset}`,
     // Message count
     formatters.messageCount(data.msgCount),
     // Context length
@@ -293,7 +298,9 @@ const buildStatusLine = (data: EnrichedStatusLineData) =>
     `${colors.lightGreen}${formatters.cost(data.cost)}${colors.reset}`,
     // Context warning
     formatters.contextWarning(data.exceeds_200k_tokens),
-  ].join("") + "\n";
+  ]
+    .filter(Boolean)
+    .join(" ") + "\n";
 
 /**
  * Read JSON input from file argument or stdin
