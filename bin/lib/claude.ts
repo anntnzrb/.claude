@@ -192,7 +192,7 @@ const setupEnv = (): EnvironmentConfig => ({ ...process.env, ...claudeEnv });
  */
 const spawnClaude = (args: string[]) => async (env: EnvironmentConfig) => {
   const prompt = await Bun.file(paths.autoPlanMode).text();
-  const claudeArgs = [...args, "--append-system-prompt", prompt];
+  const claudeArgs = [...args, "--append-system-prompt", `${prompt}`];
 
   return Bun.spawn([...claudeCmd, ...claudeArgs], {
     env,
