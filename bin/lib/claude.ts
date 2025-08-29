@@ -161,16 +161,11 @@ const buildMcpServers = (mcpArray: McpServer[]): McpServersMap =>
  * @returns Promise that resolves when merge is complete or skipped
  */
 const mergeConfigs = (): Promise<void> =>
-  ((existsSync(paths.claude) || existsSync(paths.mcp)) &&
-    Promise.all([
-      safeJson(paths.global),
-      safeJson(paths.claude),
-      safeJson(paths.mcp),
-    ])
-      .then(([global, claude, mcpArray]) => ({
+  (existsSync(paths.claude) &&
+    Promise.all([safeJson(paths.global), safeJson(paths.claude)])
+      .then(([global, claude]) => ({
         ...global,
         ...claude,
-        mcpServers: buildMcpServers(mcpArray as McpServer[]),
       }))
       .then((merged) =>
         Bun.write(paths.global, JSON.stringify(merged, null, 2)),
@@ -192,7 +187,17 @@ const setupEnv = (): EnvironmentConfig => ({ ...process.env, ...claudeEnv });
  */
 const spawnClaude = (args: string[]) => async (env: EnvironmentConfig) => {
   const prompt = await Bun.file(paths.autoPlanMode).text();
-  const claudeArgs = [...args, "--append-system-prompt", `${prompt}`];
+  const mcpArray = (await safeJson(paths.mcp)) as McpServer[];
+  const mcpServers = buildMcpServers(mcpArray);
+
+  const claudeArgs = [
+    ...args,
+    "--append-system-prompt",
+    `${prompt}`,
+    ...(Object.keys(mcpServers).length > 0
+      ? ["--mcp-config", JSON.stringify({ mcpServers }), "--strict-mcp-config"]
+      : []),
+  ];
 
   return Bun.spawn([...claudeCmd, ...claudeArgs], {
     env,
