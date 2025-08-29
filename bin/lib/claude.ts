@@ -27,6 +27,7 @@ interface McpServer {
   name: string;
   command?: string;
   url?: string;
+  env?: EnvironmentConfig;
   disabled?: boolean;
 }
 
@@ -140,7 +141,7 @@ const claudeCmd = [
 const buildMcpServers = (mcpArray: McpServer[]): McpServersMap =>
   mcpArray
     .filter((server) => !server.disabled)
-    .reduce((acc, { name, command, url, disabled, ...rest }) => {
+    .reduce((acc, { name, command, url, env, disabled, ...rest }) => {
       const parts = command?.split(" ") || [];
       return {
         ...acc,
@@ -152,6 +153,7 @@ const buildMcpServers = (mcpArray: McpServer[]): McpServersMap =>
             args: parts.slice(1), // all arguments after the command
           }),
           ...(url && { type: "http", url }),
+          ...(env && { env }),
         },
       };
     }, {});
