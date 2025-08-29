@@ -120,18 +120,22 @@ const safeRead = (path: string) =>
     : Promise.resolve("");
 
 /**
+ * Safely parse JSON string, returning empty object on error
+ * @param jsonStr - JSON string to parse
+ * @returns Promise resolving to parsed object or empty object on parse error
+ */
+const safeJsonParse = (jsonStr: string): Promise<Partial<StatusLineData>> =>
+  Promise.resolve(jsonStr)
+    .then(JSON.parse)
+    .catch(() => ({}));
+
+/**
  * Parse JSON input string, filtering out comment lines starting with #
  * @param input - Raw JSON input string that may contain comments
- * @returns Parsed StatusLineData or partial object on parse error
+ * @returns Promise resolving to parsed StatusLineData or partial object on parse error
  */
-const parseInput = (input: string): Partial<StatusLineData> =>
-  (() => {
-    try {
-      return JSON.parse(input.replace(/^#.*/gm, ""));
-    } catch {
-      return {};
-    }
-  })();
+const parseInput = (input: string): Promise<Partial<StatusLineData>> =>
+  safeJsonParse(input.replace(/^#.*/gm, ""));
 
 /**
  * Log session input to temporary file for debugging
@@ -163,20 +167,20 @@ const getDisplayPath = async (
   if (!path) return "";
 
   // Try git-relative path first
-  const gitPath = await (async () => {
-    try {
-      const { stdout } =
-        await Bun.$`cd ${path} && git rev-parse --show-toplevel 2>/dev/null`.quiet();
-      if (stdout.trim()) {
-        const repoRoot = stdout.trim();
-        const relPath = path.replace(repoRoot, "").replace(/^\//, "") || ".";
-        return relPath === "."
-          ? basename(repoRoot)
-          : `${basename(repoRoot)}/${relPath}`;
-      }
-    } catch {}
-    return null;
-  })();
+  const gitPath =
+    await Bun.$`cd ${path} && git rev-parse --show-toplevel 2>/dev/null`
+      .quiet()
+      .then(({ stdout }) => {
+        if (stdout.trim()) {
+          const repoRoot = stdout.trim();
+          const relPath = path.replace(repoRoot, "").replace(/^\//, "") || ".";
+          return relPath === "."
+            ? basename(repoRoot)
+            : `${basename(repoRoot)}/${relPath}`;
+        }
+        return null;
+      })
+      .catch(() => null);
 
   return (
     gitPath ||
@@ -189,26 +193,25 @@ const getDisplayPath = async (
 /**
  * Check if entry represents a quota-relevant user message
  * @param line - JSONL line to parse and validate
- * @returns True if entry is a user message that counts toward quota
+ * @returns Promise resolving to true if entry is a user message that counts toward quota
  */
-const isUserMessage = (line: string): boolean => {
-  try {
-    const entry = JSON.parse(line);
-    const msg = entry.message?.content || "";
-    return (
-      entry.type === "user" &&
-      !entry.toolUseResult &&
-      !entry.isMeta &&
-      ![
-        "<command-name>",
-        "<local-command-stdout>",
-        "Caveat: The messages below",
-      ].some((pattern) => msg.includes(pattern))
-    );
-  } catch {
-    return false;
-  }
-};
+const isUserMessage = (line: string): Promise<boolean> =>
+  Promise.resolve(line)
+    .then(JSON.parse)
+    .then((entry) => {
+      const msg = entry.message?.content || "";
+      return (
+        entry.type === "user" &&
+        !entry.toolUseResult &&
+        !entry.isMeta &&
+        ![
+          "<command-name>",
+          "<local-command-stdout>",
+          "Caveat: The messages below",
+        ].some((pattern) => msg.includes(pattern))
+      );
+    })
+    .catch(() => false);
 
 /**
  * Count actual user messages in Claude Code transcript file
@@ -221,14 +224,26 @@ const isUserMessage = (line: string): boolean => {
  */
 const countUserMessages = async (path: string): Promise<number> =>
   path
-    ? safeRead(path).then(
-        (content) =>
-          content
-            .split("\n")
-            .filter((line) => line.trim())
-            .filter(isUserMessage).length,
-      )
+    ? safeRead(path)
+        .then((content) => content.split("\n").filter((line) => line.trim()))
+        .then((lines) => Promise.all(lines.map(isUserMessage)))
+        .then((results) => results.filter(Boolean).length)
     : 0;
+
+/**
+ * Parse line to extract data, returning empty array on error
+ * @param line - JSONL line to parse
+ * @returns Promise resolving to array with data or empty array
+ */
+const parseLineForMetrics = (line: string): Promise<any[]> =>
+  Promise.resolve(line)
+    .then(JSON.parse)
+    .then((data) =>
+      data.message?.usage && data.isSidechain !== true && data.timestamp
+        ? [data]
+        : [],
+    )
+    .catch(() => []);
 
 /**
  * Get token metrics from Claude Code transcript file
@@ -245,22 +260,17 @@ const getTokenMetrics = async (path: string): Promise<TokenMetrics> =>
         .then((content) =>
           content
             .split("\n")
-            .filter((line) => line.trim() && line.startsWith("{"))
-            .flatMap((line) => {
-              const data = JSON.parse(line);
-              return data.message?.usage &&
-                data.isSidechain !== true &&
-                data.timestamp
-                ? [data]
-                : [];
-            })
-            .sort(
-              (a, b) =>
-                new Date(a.timestamp).getTime() -
-                new Date(b.timestamp).getTime(),
-            )
-            .at(-1),
+            .filter((line) => line.trim() && line.startsWith("{")),
         )
+        .then((lines) => Promise.all(lines.map(parseLineForMetrics)))
+        .then((results) => results.flat())
+        .then((entries) =>
+          entries.sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+          ),
+        )
+        .then((sortedEntries) => sortedEntries.at(-1))
         .then((entry) => ({
           contextLength: entry?.message?.usage
             ? (entry.message.usage.input_tokens || 0) +
@@ -347,7 +357,7 @@ const enrichData = async (
  */
 const main = () =>
   readInput(process.argv.slice(2))
-    .then((input) => enrichData(parseInput(input), input))
+    .then((input) => parseInput(input).then((data) => enrichData(data, input)))
     .then(buildStatusLine)
     .then(process.stdout.write.bind(process.stdout));
 
