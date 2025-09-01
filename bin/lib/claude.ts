@@ -67,6 +67,31 @@ const safeJson = (path: string): Promise<unknown> =>
         .catch(() => ({}))
     : Promise.resolve({});
 
+/**
+ * Safe file read with fallback to empty string on error
+ * @param path - File system path to read from
+ * @returns Promise resolving to file content or empty string on error
+ */
+const safeRead = (path: string): Promise<string> =>
+  existsSync(path)
+    ? Bun.file(path)
+        .text()
+        .catch(() => "")
+    : Promise.resolve("");
+
+/**
+ * Safe file write with fallback to void on error
+ * @param path - File system path to write to
+ * @param content - Content to write
+ * @returns Promise resolving to void or logging warning on error
+ */
+const safeWrite = (path: string, content: string): Promise<void> =>
+  Bun.write(path, content)
+    .then(() => {})
+    .catch((err) => {
+      console.warn(`File write failed: ${err}`);
+    });
+
 /** ***
  * Configuration constants
  * *** **/
@@ -90,6 +115,10 @@ const paths = {
   global: join(homedir(), ".claude.json"),
   /** Auto Plan Mode system prompt file path */
   autoPlanMode: join(CLAUDE_HOME, "bin", "lib", "auto-plan-mode.in"),
+  /** Centralized LLM instructions source file path */
+  instructionsSource: join(homedir(), ".config", "agents", "instructions.md"),
+  /** Target CLAUDE.md file path */
+  instructionsTarget: join(CLAUDE_HOME, "CLAUDE.md"),
 };
 
 /**
@@ -159,6 +188,17 @@ const buildMcpServers = (mcpArray: McpServer[]): McpServersMap =>
     }, {});
 
 /**
+ * Sync centralized instructions to CLAUDE.md
+ * @returns Promise that resolves when sync is complete or skipped
+ */
+const syncInstructions = (): Promise<void> =>
+  !existsSync(paths.instructionsSource)
+    ? Promise.resolve()
+    : safeRead(paths.instructionsSource).then((content) =>
+        safeWrite(paths.instructionsTarget, content),
+      );
+
+/**
  * Merge global configs into final global configuration
  * @returns Promise that resolves when merge is complete or skipped
  */
@@ -213,7 +253,8 @@ const spawnClaude = (args: string[]) => async (env: EnvironmentConfig) => {
 
 const [, , ...args] = process.argv;
 
-mergeConfigs()
+syncInstructions()
+  .then(() => mergeConfigs())
   .then(() => setupEnv())
   .then(async (env) => spawnClaude(args)(env))
   .then((proc) => proc.exited)
