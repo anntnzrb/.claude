@@ -1,17 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
-    "CLAUDE_IN_CC": true
+    "CLAUDE_IN_CC": "true"
   },
   "includeCoAuthoredBy": false,
-  "learnMode": false,
-  "model": "opusplan",
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/bin/lib/statusline.ts"
-  },
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash(cat:*)",
       "Bash(cd:*)",
@@ -52,6 +45,13 @@
       "mcp__sequentialthinking",
       "mcp__deepwiki",
       "mcp__archon"
-    ]
-  }
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/bin/lib/statusline.ts"
+  },
+  "learnMode": false,
+  "model": "sonnet"
 }
