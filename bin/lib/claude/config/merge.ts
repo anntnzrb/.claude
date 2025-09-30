@@ -13,14 +13,10 @@ import { paths } from "./paths.ts";
 export const mergeConfigs = async (): Promise<void> => {
   if (!existsSync(paths.claude)) return;
 
-  try {
-    const [global, claude] = await Promise.all([
-      safeJsonRead(paths.global),
-      safeJsonRead(paths.claude),
-    ]);
-
-    await safeJsonWrite(paths.global, { ...global, ...claude });
-  } catch (err) {
-    console.warn(`Config merge failed: ${err}`);
-  }
+  await Promise.all([
+    safeJsonRead(paths.global),
+    safeJsonRead(paths.claude),
+  ])
+    .then(([global, claude]) => safeJsonWrite(paths.global, { ...global, ...claude }))
+    .catch((err) => console.warn(`Config merge failed: ${err}`));
 };

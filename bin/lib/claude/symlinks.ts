@@ -27,12 +27,10 @@ export const createAndSaveSymlinks = async (cwd: string): Promise<void> => {
     const claudeMdPath = join(dirname(agentsMdPath), "CLAUDE.md");
     if (existsSync(claudeMdPath)) continue;
 
-    try {
-      await Bun.$`ln -s AGENTS.md ${claudeMdPath}`.quiet();
-      created.push(claudeMdPath);
-    } catch {
-      console.warn(`Failed to symlink: ${claudeMdPath}`);
-    }
+    await Bun.$`ln -s AGENTS.md ${claudeMdPath}`
+      .quiet()
+      .then(() => created.push(claudeMdPath))
+      .catch(() => console.warn(`Failed to symlink: ${claudeMdPath}`));
   }
 
   await safeJsonWrite(MANIFEST_PATH(), created);

@@ -22,15 +22,18 @@ export const getTokenMetrics = async (path: string): Promise<TokenMetrics> => {
     .split("\n")
     .filter((line) => line.trim() && line.startsWith("{"));
 
-  const entries = [];
-  for (const line of lines) {
-    try {
-      const data = JSON.parse(line);
-      if (data.message?.usage && data.isSidechain !== true && data.timestamp) {
-        entries.push(data);
-      }
-    } catch {}
-  }
+  const entries = await Promise.all(
+    lines.map((line) =>
+      Promise.resolve(line)
+        .then(JSON.parse)
+        .then((data) =>
+          data.message?.usage && data.isSidechain !== true && data.timestamp
+            ? data
+            : null,
+        )
+        .catch(() => null),
+    ),
+  ).then((results) => results.filter((entry) => entry !== null));
 
   entries.sort(
     (a, b) =>
