@@ -2,10 +2,6 @@
  * ANSI color codes for terminal formatting
  */
 
-/**
- * ANSI color codes for terminal formatting
- * @readonly
- */
 export const colors = {
   /** Dim/faded text color */
   dim: "\x1b[2m",

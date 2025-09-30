@@ -43,8 +43,29 @@ export const safeDelete = (path: string): Promise<void> =>
     : Promise.resolve();
 
 /**
- * Check if file exists at given path
- * @param path - File system path to check
- * @returns True if file exists, false otherwise
+ * Parse JSONL file with custom line processor
+ * @param path - Path to JSONL file
+ * @param parseLine - Function to parse and filter each line
+ * @returns Promise resolving to array of parsed results
  */
-export const fileExists = (path: string): boolean => existsSync(path);
+export const parseJsonlFile = async <T>(
+  path: string,
+  parseLine: (data: any) => T | null,
+): Promise<T[]> => {
+  const content = await safeRead(path);
+  if (!content) return [];
+
+  const results = await Promise.all(
+    content
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) =>
+        Promise.resolve(line)
+          .then(JSON.parse)
+          .then(parseLine)
+          .catch(() => null),
+      ),
+  );
+
+  return results.filter((r): r is T => r !== null);
+};

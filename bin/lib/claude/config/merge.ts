@@ -2,24 +2,25 @@
  * Configuration merging utilities
  */
 
-import { fileExists } from "../../shared/fs.ts";
-import { safeJsonRead } from "../../shared/json.ts";
+import { existsSync } from "fs";
+import { safeJsonRead, safeJsonWrite } from "../../shared/json.ts";
 import { paths } from "./paths.ts";
 
 /**
  * Merge global configs into final global configuration
  * @returns Promise that resolves when merge is complete or skipped
  */
-export const mergeConfigs = (): Promise<void> =>
-  (fileExists(paths.claude) &&
-    Promise.all([safeJsonRead(paths.global), safeJsonRead(paths.claude)])
-      .then(([global, claude]) => ({
-        ...global,
-        ...claude,
-      }))
-      .then((merged) =>
-        Bun.write(paths.global, JSON.stringify(merged, null, 2)),
-      )
-      .then(() => {})
-      .catch((err) => console.warn(`Config merge failed: ${err}`))) ||
-  Promise.resolve();
+export const mergeConfigs = async (): Promise<void> => {
+  if (!existsSync(paths.claude)) return;
+
+  try {
+    const [global, claude] = await Promise.all([
+      safeJsonRead(paths.global),
+      safeJsonRead(paths.claude),
+    ]);
+
+    await safeJsonWrite(paths.global, { ...global, ...claude });
+  } catch (err) {
+    console.warn(`Config merge failed: ${err}`);
+  }
+};

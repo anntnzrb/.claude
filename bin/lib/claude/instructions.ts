@@ -2,7 +2,8 @@
  * Instructions file synchronization and cleanup
  */
 
-import { fileExists, safeRead, safeWrite, safeDelete } from "../shared/fs.ts";
+import { existsSync } from "fs";
+import { safeRead, safeWrite, safeDelete } from "../shared/fs.ts";
 import { paths } from "./config/paths.ts";
 
 /**
@@ -10,7 +11,7 @@ import { paths } from "./config/paths.ts";
  * @returns Promise that resolves when sync is complete or skipped
  */
 export const syncInstructions = (): Promise<void> =>
-  !fileExists(paths.instructionsSource)
+  !existsSync(paths.instructionsSource)
     ? Promise.resolve()
     : safeRead(paths.instructionsSource).then((content) =>
         safeWrite(paths.instructionsTarget, content),

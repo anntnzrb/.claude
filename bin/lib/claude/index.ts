@@ -16,8 +16,7 @@ import { die } from "../shared/process.ts";
 import { mergeConfigs } from "./config/merge.ts";
 import { syncInstructions, cleanupInstructions } from "./instructions.ts";
 import {
-  createAgentsSymlinks,
-  saveSymlinkManifest,
+  createAndSaveSymlinks,
   cleanupAgentsSymlinks,
 } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
@@ -38,10 +37,9 @@ const main = async () => {
 
   await syncInstructions();
   await mergeConfigs();
-  const symlinks = await createAgentsSymlinks(cwd);
-  await saveSymlinkManifest(symlinks);
+  await createAndSaveSymlinks(cwd);
   const env = setupEnv();
-  const proc = await spawnClaude(args)(env);
+  const proc = await spawnClaude(args, env);
   await proc.exited;
   await cleanup();
   process.exit(0);
