@@ -15,10 +15,7 @@
 import { die } from "../shared/process.ts";
 import { mergeConfigs } from "./config/merge.ts";
 import { syncInstructions, cleanupInstructions } from "./instructions.ts";
-import {
-  createAndSaveSymlinks,
-  cleanupAgentsSymlinks,
-} from "./symlinks.ts";
+import { createAndSaveSymlinks, cleanupAgentsSymlinks } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
 
 /**

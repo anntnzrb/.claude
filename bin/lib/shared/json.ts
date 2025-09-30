@@ -12,7 +12,7 @@ import { safeRead } from "./fs.ts";
 export const safeJsonParse = <T = unknown>(jsonStr: string): Promise<T> =>
   Promise.resolve(jsonStr)
     .then(JSON.parse)
-    .catch(() => ({} as T));
+    .catch(() => ({}) as T);
 
 /**
  * Safely read and parse JSON file

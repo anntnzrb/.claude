@@ -37,11 +37,7 @@ export const spawnClaude = async (
     "--append-system-prompt",
     prompt,
     ...(Object.keys(mcpServers).length > 0
-      ? [
-          "--mcp-config",
-          JSON.stringify({ mcpServers }),
-          "--strict-mcp-config",
-        ]
+      ? ["--mcp-config", JSON.stringify({ mcpServers }), "--strict-mcp-config"]
       : []),
   ];
 

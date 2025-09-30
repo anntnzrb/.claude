@@ -2,7 +2,7 @@
 
 /**
  * Claude Code statusline generator
- * 
+ *
  * Re-exported from modular implementation in ./statusline/
  */
 
