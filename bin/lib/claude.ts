@@ -199,6 +199,18 @@ const syncInstructions = (): Promise<void> =>
       );
 
 /**
+ * Cleanup CLAUDE.md file after session ends
+ * @returns Promise that resolves when cleanup is complete or skipped
+ */
+const cleanupInstructions = (): Promise<void> =>
+  existsSync(paths.instructionsTarget)
+    ? Bun.file(paths.instructionsTarget)
+        .delete()
+        .then(() => {})
+        .catch(() => {})
+    : Promise.resolve();
+
+/**
  * Merge global configs into final global configuration
  * @returns Promise that resolves when merge is complete or skipped
  */
@@ -258,5 +270,6 @@ syncInstructions()
   .then(() => setupEnv())
   .then(async (env) => spawnClaude(args)(env))
   .then((proc) => proc.exited)
+  .then(() => cleanupInstructions())
   .then(process.exit)
-  .catch(die);
+  .catch((err) => cleanupInstructions().finally(() => die(err)));
