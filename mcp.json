@@ -1,7 +1,7 @@
 [
   {
-    "name": "MCP_DOCKER",
-    "command": "docker mcp gateway run"
+    "name": "exa",
+    "url": "https://mcp.exa.ai/mcp"
   },
   {
     "name": "context7",
@@ -10,7 +10,8 @@
   },
   {
     "name": "sequentialthinking",
-    "url": "https://remote.mcpservers.org/sequentialthinking/mcp"
+    "url": "https://remote.mcpservers.org/sequentialthinking/mcp",
+    "disabled": true
   },
   {
     "name": "deepwiki",
