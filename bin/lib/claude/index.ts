@@ -17,6 +17,7 @@ import { mergeConfigs } from "./config/merge.ts";
 import { syncInstructions, cleanupInstructions } from "./instructions.ts";
 import { createAndSaveSymlinks, cleanupAgentsSymlinks } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
+import { validateAnthropicToken } from "./config/glm.ts";
 
 /**
  * Cleanup all resources after Claude session ends
@@ -32,11 +33,22 @@ const main = async () => {
   const [, , ...args] = process.argv;
   const cwd = process.cwd();
 
+  // Check for --glm flag and validate if present
+  const glmIndex = args.indexOf("--glm");
+  const isGlmMode = glmIndex !== -1;
+
+  if (isGlmMode) {
+    // Remove --glm from args before passing to Claude
+    args.splice(glmIndex, 1);
+    // Validate ANTHROPIC_AUTH_TOKEN for GLM mode
+    validateAnthropicToken();
+  }
+
   await syncInstructions();
   await mergeConfigs();
   await createAndSaveSymlinks(cwd);
-  const env = setupEnv();
-  const proc = await spawnClaude(args, env);
+  const env = setupEnv(isGlmMode);
+  const proc = await spawnClaude(args, env, isGlmMode);
   await proc.exited;
   await cleanup();
   process.exit(0);

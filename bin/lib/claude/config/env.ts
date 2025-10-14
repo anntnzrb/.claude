@@ -3,6 +3,7 @@
  */
 
 import type { EnvironmentConfig } from "../types.ts";
+import { glmEnv } from "./glm.ts";
 
 /**
  * Environment variables to disable non-essential Claude features
