@@ -48,10 +48,11 @@
     ],
     "defaultMode": "bypassPermissions"
   },
+  "model": "sonnet",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/bin/lib/statusline.ts"
   },
-  "learnMode": false,
-  "model": "sonnet"
+  "alwaysThinkingEnabled": true,
+  "learnMode": false
 }
