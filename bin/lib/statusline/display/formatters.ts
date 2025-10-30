@@ -2,7 +2,12 @@
  * Domain formatting utilities
  */
 
-import type { ModelInfo, OutputStyle, CostInfo, TokenMetrics } from "../types.ts";
+import type {
+  ModelInfo,
+  OutputStyle,
+  CostInfo,
+  TokenMetrics,
+} from "../types.ts";
 
 /**
  * Domain formatting utilities

@@ -36,10 +36,11 @@ export const createTokenValidator = (providerName: string) => {
  * @param config - Provider configuration with name, base URL, and model names
  * @returns Environment configuration object
  */
-export const createProviderEnv = (config: ProviderConfig): EnvironmentConfig => ({
-  ANTHROPIC_BASE_URL: config.baseUrl,
-  API_TIMEOUT_MS: "3000000",
-  ANTHROPIC_DEFAULT_HAIKU_MODEL: config.haikuModel,
-  ANTHROPIC_DEFAULT_SONNET_MODEL: config.sonnetModel,
-  ANTHROPIC_DEFAULT_OPUS_MODEL: config.opusModel,
-} as const);
+export const createProviderEnv = (config: ProviderConfig): EnvironmentConfig =>
+  ({
+    ANTHROPIC_BASE_URL: config.baseUrl,
+    API_TIMEOUT_MS: "3000000",
+    ANTHROPIC_DEFAULT_HAIKU_MODEL: config.haikuModel,
+    ANTHROPIC_DEFAULT_SONNET_MODEL: config.sonnetModel,
+    ANTHROPIC_DEFAULT_OPUS_MODEL: config.opusModel,
+  }) as const;

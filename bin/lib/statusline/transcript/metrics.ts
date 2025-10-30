@@ -36,8 +36,7 @@ export const getTokenMetrics = async (path: string): Promise<TokenMetrics> => {
   ).then((results) => results.filter((entry) => entry !== null));
 
   entries.sort(
-    (a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 
   const latest = entries.at(-1);

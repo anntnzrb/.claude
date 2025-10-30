@@ -17,7 +17,10 @@ import { buildMcpServers } from "./config/mcp.ts";
  * @param isMiniMaxMode - Whether MiniMax M2 mode is enabled
  * @returns Environment object for Claude Code execution
  */
-export const setupEnv = (isGlmMode = false, isMiniMaxMode = false): EnvironmentConfig => ({
+export const setupEnv = (
+  isGlmMode = false,
+  isMiniMaxMode = false,
+): EnvironmentConfig => ({
   ...process.env,
   ...claudeEnv,
   ...(isGlmMode ? glmEnv : {}),
