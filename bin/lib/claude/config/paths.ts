@@ -24,8 +24,4 @@ export const paths = {
   global: join(homedir(), ".claude.json"),
   /** Auto Plan Mode system prompt file path */
   autoPlanMode: join(CLAUDE_HOME, "bin", "lib", "auto-plan-mode.in"),
-  /** Centralized LLM instructions source file path */
-  instructionsSource: join(homedir(), ".config", "agents", "instructions.md"),
-  /** Target CLAUDE.md file path */
-  instructionsTarget: join(CLAUDE_HOME, "CLAUDE.md"),
 } as const;
