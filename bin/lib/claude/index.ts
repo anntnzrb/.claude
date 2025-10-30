@@ -14,7 +14,6 @@
 
 import { die } from "../shared/process.ts";
 import { mergeConfigs } from "./config/merge.ts";
-import { syncInstructions, cleanupInstructions } from "./instructions.ts";
 import { createAndSaveSymlinks, cleanupAgentsSymlinks } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
 import { validateAnthropicToken as validateGlmToken } from "./config/glm.ts";
@@ -25,7 +24,7 @@ import { validateAnthropicToken as validateMiniMaxToken } from "./config/minimax
  * @returns Promise that resolves when cleanup is complete
  */
 const cleanup = (): Promise<void> =>
-  Promise.all([cleanupInstructions(), cleanupAgentsSymlinks()]).then(() => {});
+  Promise.all([cleanupAgentsSymlinks()]).then(() => {});
 
 /**
  * Main execution flow
@@ -60,7 +59,6 @@ const main = async () => {
     }
   }
 
-  await syncInstructions();
   await mergeConfigs();
   await createAndSaveSymlinks(cwd);
   const env = setupEnv(isGlmMode, isMiniMaxMode);
