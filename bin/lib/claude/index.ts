@@ -17,7 +17,8 @@ import { mergeConfigs } from "./config/merge.ts";
 import { syncInstructions, cleanupInstructions } from "./instructions.ts";
 import { createAndSaveSymlinks, cleanupAgentsSymlinks } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
-import { validateAnthropicToken } from "./config/glm.ts";
+import { validateAnthropicToken as validateGlmToken } from "./config/glm.ts";
+import { validateAnthropicToken as validateMiniMaxToken } from "./config/minimax.ts";
 
 /**
  * Cleanup all resources after Claude session ends
@@ -37,18 +38,33 @@ const main = async () => {
   const glmIndex = args.indexOf("--glm");
   const isGlmMode = glmIndex !== -1;
 
+  // Check for --m2 flag and validate if present
+  const m2Index = args.indexOf("--m2");
+  const isMiniMaxMode = m2Index !== -1;
+
   if (isGlmMode) {
     // Remove --glm from args before passing to Claude
     args.splice(glmIndex, 1);
     // Validate ANTHROPIC_AUTH_TOKEN for GLM mode
-    validateAnthropicToken();
+    validateGlmToken();
+  }
+
+  if (isMiniMaxMode) {
+    // Recalculate index after potential removal of --glm flag
+    const updatedM2Index = args.indexOf("--m2");
+    if (updatedM2Index !== -1) {
+      // Remove --m2 from args before passing to Claude
+      args.splice(updatedM2Index, 1);
+      // Validate ANTHROPIC_AUTH_TOKEN for MiniMax mode
+      validateMiniMaxToken();
+    }
   }
 
   await syncInstructions();
   await mergeConfigs();
   await createAndSaveSymlinks(cwd);
-  const env = setupEnv(isGlmMode);
-  const proc = await spawnClaude(args, env, isGlmMode);
+  const env = setupEnv(isGlmMode, isMiniMaxMode);
+  const proc = await spawnClaude(args, env, isGlmMode, isMiniMaxMode);
   await proc.exited;
   await cleanup();
   process.exit(0);
