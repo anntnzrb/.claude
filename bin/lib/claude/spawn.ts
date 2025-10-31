@@ -5,7 +5,7 @@
 import { safeRead } from "../shared/fs.ts";
 import { safeJsonRead } from "../shared/json.ts";
 import type { EnvironmentConfig, McpServer } from "./types.ts";
-import { claudeEnv, claudeCmd } from "./config/env.ts";
+import { claudeCmd } from "./config/env.ts";
 import { glmEnv, minimaxEnv } from "./config/providers.ts";
 import { paths } from "./config/paths.ts";
 import { buildMcpServers } from "./config/mcp.ts";
@@ -30,7 +30,6 @@ export const setupEnv = (
   isMiniMaxMode = false,
 ): EnvironmentConfig => ({
   ...process.env,
-  ...claudeEnv,
   ...conditional(isGlmMode, glmEnv),
   ...conditional(isMiniMaxMode, minimaxEnv),
   // Map provider-specific API keys to ANTHROPIC_AUTH_TOKEN
