@@ -5,10 +5,10 @@
 import { createTokenValidator, createProviderEnv } from "./sharedProvider.ts";
 
 /**
- * Check if ANTHROPIC_AUTH_TOKEN is set and non-empty
- * @throws Error if ANTHROPIC_AUTH_TOKEN is missing or empty
+ * Check if ZAI_API_KEY is set and non-empty
+ * @throws Error if ZAI_API_KEY is missing or empty
  */
-export const validateAnthropicToken = createTokenValidator("GLM mode");
+export const validateZaiToken = createTokenValidator("GLM mode", "ZAI_API_KEY");
 
 /**
  * GLM-specific environment variables (overrides and additions to base Claude config)

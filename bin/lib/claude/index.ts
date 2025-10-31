@@ -16,8 +16,8 @@ import { die } from "../shared/process.ts";
 import { mergeConfigs } from "./config/merge.ts";
 import { createAndSaveSymlinks, cleanupAgentsSymlinks } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
-import { validateAnthropicToken as validateGlmToken } from "./config/glm.ts";
-import { validateAnthropicToken as validateMiniMaxToken } from "./config/minimax.ts";
+import { validateZaiToken as validateGlmToken } from "./config/glm.ts";
+import { validateMiniMaxToken as validateMiniMaxToken } from "./config/minimax.ts";
 
 /**
  * Cleanup all resources after Claude session ends
@@ -44,7 +44,7 @@ const main = async () => {
   if (isGlmMode) {
     // Remove --glm from args before passing to Claude
     args.splice(glmIndex, 1);
-    // Validate ANTHROPIC_AUTH_TOKEN for GLM mode
+    // Validate ZAI_API_KEY for GLM mode
     validateGlmToken();
   }
 
@@ -54,7 +54,7 @@ const main = async () => {
     if (updatedM2Index !== -1) {
       // Remove --m2 from args before passing to Claude
       args.splice(updatedM2Index, 1);
-      // Validate ANTHROPIC_AUTH_TOKEN for MiniMax mode
+      // Validate MINIMAX_API_KEY for MiniMax mode
       validateMiniMaxToken();
     }
   }

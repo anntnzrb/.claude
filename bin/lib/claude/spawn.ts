@@ -25,6 +25,13 @@ export const setupEnv = (
   ...claudeEnv,
   ...(isGlmMode ? glmEnv : {}),
   ...(isMiniMaxMode ? minimaxEnv : {}),
+  // Map provider-specific API keys to ANTHROPIC_AUTH_TOKEN
+  ...(isGlmMode && process.env.ZAI_API_KEY
+    ? { ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY }
+    : {}),
+  ...(isMiniMaxMode && process.env.MINIMAX_API_KEY
+    ? { ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY }
+    : {}),
 });
 
 /**

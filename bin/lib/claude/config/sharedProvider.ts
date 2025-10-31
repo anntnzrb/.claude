@@ -18,14 +18,18 @@ export interface ProviderConfig {
 /**
  * Create a token validation function for a specific provider
  * @param providerName - Name of the provider (for error messages)
- * @returns Validation function that checks for ANTHROPIC_AUTH_TOKEN
+ * @param envVarName - Environment variable name to check (default: "ANTHROPIC_AUTH_TOKEN")
+ * @returns Validation function that checks for the specified environment variable
  */
-export const createTokenValidator = (providerName: string) => {
+export const createTokenValidator = (
+  providerName: string,
+  envVarName = "ANTHROPIC_AUTH_TOKEN",
+) => {
   return (): void => {
-    const token = process.env.ANTHROPIC_AUTH_TOKEN;
+    const token = process.env[envVarName];
     if (!token || token.trim() === "") {
       throw new Error(
-        `ANTHROPIC_AUTH_TOKEN environment variable is required for ${providerName} but is not set or is empty`,
+        `${envVarName} environment variable is required for ${providerName} but is not set or is empty`,
       );
     }
   };

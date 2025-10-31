@@ -5,10 +5,13 @@
 import { createTokenValidator, createProviderEnv } from "./sharedProvider.ts";
 
 /**
- * Check if ANTHROPIC_AUTH_TOKEN is set and non-empty
- * @throws Error if ANTHROPIC_AUTH_TOKEN is missing or empty
+ * Check if MINIMAX_API_KEY is set and non-empty
+ * @throws Error if MINIMAX_API_KEY is missing or empty
  */
-export const validateAnthropicToken = createTokenValidator("MiniMax M2 mode");
+export const validateMiniMaxToken = createTokenValidator(
+  "MiniMax M2 mode",
+  "MINIMAX_API_KEY",
+);
 
 /**
  * MiniMax M2-specific environment variables (overrides and additions to base Claude config)
