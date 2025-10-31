@@ -6,10 +6,18 @@ import { safeRead } from "../shared/fs.ts";
 import { safeJsonRead } from "../shared/json.ts";
 import type { EnvironmentConfig, McpServer } from "./types.ts";
 import { claudeEnv, claudeCmd } from "./config/env.ts";
-import { glmEnv } from "./config/glm.ts";
-import { minimaxEnv } from "./config/minimax.ts";
+import { glmEnv, minimaxEnv } from "./config/providers.ts";
 import { paths } from "./config/paths.ts";
 import { buildMcpServers } from "./config/mcp.ts";
+
+/**
+ * Conditionally spread an object if condition is true
+ * @param condition - Boolean condition to check
+ * @param env - Object to spread if condition is true
+ * @returns Object if condition is true, empty object otherwise
+ */
+const conditional = (condition: boolean, env: object): object =>
+  condition ? env : {};
 
 /**
  * Create environment object with Claude variables and development flags
@@ -23,15 +31,17 @@ export const setupEnv = (
 ): EnvironmentConfig => ({
   ...process.env,
   ...claudeEnv,
-  ...(isGlmMode ? glmEnv : {}),
-  ...(isMiniMaxMode ? minimaxEnv : {}),
+  ...conditional(isGlmMode, glmEnv),
+  ...conditional(isMiniMaxMode, minimaxEnv),
   // Map provider-specific API keys to ANTHROPIC_AUTH_TOKEN
-  ...(isGlmMode && process.env.ZAI_API_KEY
-    ? { ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY }
-    : {}),
-  ...(isMiniMaxMode && process.env.MINIMAX_API_KEY
-    ? { ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY }
-    : {}),
+  ...conditional(
+    isGlmMode && process.env.ZAI_API_KEY,
+    { ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY },
+  ),
+  ...conditional(
+    isMiniMaxMode && process.env.MINIMAX_API_KEY,
+    { ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY },
+  ),
 });
 
 /**

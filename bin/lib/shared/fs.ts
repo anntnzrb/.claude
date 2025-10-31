@@ -5,15 +5,39 @@
 import { existsSync } from "fs";
 
 /**
+ * Wrap an async operation with a fallback value on error
+ * @param operation - Promise to execute
+ * @param fallback - Value to return on error
+ * @returns Promise resolving to operation result or fallback on error
+ */
+const withFallback = <T>(operation: Promise<T>, fallback: T): Promise<T> =>
+  operation.catch(() => fallback);
+
+/**
+ * Wrap an async operation with a fallback and optional warning
+ * @param operation - Promise to execute
+ * @param fallback - Value to return on error
+ * @param warn - Warning message to log on error
+ * @returns Promise resolving to operation result or fallback on error
+ */
+const withWarning = <T>(
+  operation: Promise<T>,
+  fallback: T,
+  warn: string,
+): Promise<T> =>
+  operation.catch((err) => {
+    console.warn(`${warn}: ${err}`);
+    return fallback;
+  });
+
+/**
  * Safe file read with fallback to empty string on error
  * @param path - File system path to read from
  * @returns Promise resolving to file content or empty string on error
  */
 export const safeRead = (path: string): Promise<string> =>
   existsSync(path)
-    ? Bun.file(path)
-        .text()
-        .catch(() => "")
+    ? withFallback(Bun.file(path).text(), "")
     : Promise.resolve("");
 
 /**
@@ -23,11 +47,7 @@ export const safeRead = (path: string): Promise<string> =>
  * @returns Promise resolving to void or logging warning on error
  */
 export const safeWrite = (path: string, content: string): Promise<void> =>
-  Bun.write(path, content)
-    .then(() => {})
-    .catch((err) => {
-      console.warn(`File write failed: ${err}`);
-    });
+  withWarning(Bun.write(path, content), undefined, "File write failed");
 
 /**
  * Safe file deletion with silent error handling
@@ -36,10 +56,7 @@ export const safeWrite = (path: string, content: string): Promise<void> =>
  */
 export const safeDelete = (path: string): Promise<void> =>
   existsSync(path)
-    ? Bun.file(path)
-        .delete()
-        .then(() => {})
-        .catch(() => {})
+    ? withFallback(Bun.file(path).delete(), undefined)
     : Promise.resolve();
 
 /**
@@ -60,10 +77,12 @@ export const parseJsonlFile = async <T>(
       .split("\n")
       .filter((line) => line.trim())
       .map((line) =>
-        Promise.resolve(line)
-          .then(JSON.parse)
-          .then(parseLine)
-          .catch(() => null),
+        withFallback(
+          Promise.resolve(line)
+            .then(JSON.parse)
+            .then(parseLine),
+          null,
+        ),
       ),
   );
 

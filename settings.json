@@ -48,7 +48,6 @@
     ],
     "defaultMode": "bypassPermissions"
   },
-  "model": "sonnet",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/bin/lib/statusline.ts"
