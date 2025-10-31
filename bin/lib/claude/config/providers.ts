@@ -21,10 +21,7 @@ export interface ProviderConfig {
 /**
  * Create a token validation function for a provider
  */
-const createTokenValidator = (
-  providerName: string,
-  envVarName: string,
-) => {
+const createTokenValidator = (providerName: string, envVarName: string) => {
   return (): void => {
     const token = process.env[envVarName];
     if (!token || token.trim() === "") {

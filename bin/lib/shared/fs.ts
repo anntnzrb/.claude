@@ -78,9 +78,7 @@ export const parseJsonlFile = async <T>(
       .filter((line) => line.trim())
       .map((line) =>
         withFallback(
-          Promise.resolve(line)
-            .then(JSON.parse)
-            .then(parseLine),
+          Promise.resolve(line).then(JSON.parse).then(parseLine),
           null,
         ),
       ),

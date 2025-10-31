@@ -38,7 +38,4 @@ export const safeJsonRead = <T = unknown>(path: string): Promise<T> =>
  * @returns Promise that resolves when write completes or fails silently
  */
 export const safeJsonWrite = (path: string, data: unknown): Promise<void> =>
-  withFallback(
-    Bun.write(path, JSON.stringify(data, null, 2)),
-    undefined,
-  );
+  withFallback(Bun.write(path, JSON.stringify(data, null, 2)), undefined);

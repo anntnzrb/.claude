@@ -33,14 +33,12 @@ export const setupEnv = (
   ...conditional(isGlmMode, glmEnv),
   ...conditional(isMiniMaxMode, minimaxEnv),
   // Map provider-specific API keys to ANTHROPIC_AUTH_TOKEN
-  ...conditional(
-    isGlmMode && process.env.ZAI_API_KEY,
-    { ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY },
-  ),
-  ...conditional(
-    isMiniMaxMode && process.env.MINIMAX_API_KEY,
-    { ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY },
-  ),
+  ...conditional(isGlmMode && process.env.ZAI_API_KEY, {
+    ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY,
+  }),
+  ...conditional(isMiniMaxMode && process.env.MINIMAX_API_KEY, {
+    ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY,
+  }),
 });
 
 /**

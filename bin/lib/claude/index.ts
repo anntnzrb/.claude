@@ -16,7 +16,10 @@ import { die } from "../shared/process.ts";
 import { mergeConfigs } from "./config/merge.ts";
 import { createAndSaveSymlinks, cleanupAgentsSymlinks } from "./symlinks.ts";
 import { setupEnv, spawnClaude } from "./spawn.ts";
-import { validateZaiToken as validateGlmToken, validateMiniMaxToken } from "./config/providers.ts";
+import {
+  validateZaiToken as validateGlmToken,
+  validateMiniMaxToken,
+} from "./config/providers.ts";
 
 /**
  * Cleanup all resources after Claude session ends
