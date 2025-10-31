@@ -22,6 +22,4 @@ export const paths = {
   mcp: join(CLAUDE_HOME, "mcp.json"),
   /** Final merged global configuration file path */
   global: join(homedir(), ".claude.json"),
-  /** Auto Plan Mode system prompt file path */
-  autoPlanMode: join(CLAUDE_HOME, "bin", "lib", "auto-plan-mode.in"),
 } as const;

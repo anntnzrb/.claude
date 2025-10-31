@@ -57,14 +57,11 @@ export const spawnClaude = async (
   isGlmMode = false,
   isMiniMaxMode = false,
 ): Promise<Subprocess> => {
-  const prompt = await safeRead(paths.autoPlanMode);
   const mcpArray = (await safeJsonRead<McpServer[]>(paths.mcp)) || [];
   const mcpServers = buildMcpServers(mcpArray);
 
   const claudeArgs = [
     ...args,
-    "--append-system-prompt",
-    prompt,
     ...(Object.keys(mcpServers).length > 0
       ? ["--mcp-config", JSON.stringify({ mcpServers }), "--strict-mcp-config"]
       : []),
