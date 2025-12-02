@@ -10,8 +10,10 @@ import { existsSync } from "fs";
  * @param fallback - Value to return on error
  * @returns Promise resolving to operation result or fallback on error
  */
-export const withFallback = <T>(operation: Promise<T>, fallback: T): Promise<T> =>
-  operation.catch(() => fallback);
+export const withFallback = <T>(
+  operation: Promise<T>,
+  fallback: T,
+): Promise<T> => operation.catch(() => fallback);
 
 /**
  * Wrap an async operation with a fallback and optional warning

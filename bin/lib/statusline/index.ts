@@ -40,7 +40,11 @@ const enrichData = async (
     workspace: data.workspace ?? { current_dir: "", project_dir: "" },
     version: data.version ?? "",
     output_style: data.output_style ?? { name: "default" },
-    cost: data.cost ?? { total_cost_usd: 0, total_duration_ms: 0, total_api_duration_ms: 0 },
+    cost: data.cost ?? {
+      total_cost_usd: 0,
+      total_duration_ms: 0,
+      total_api_duration_ms: 0,
+    },
     exceeds_200k_tokens: data.exceeds_200k_tokens ?? false,
     msgCount,
     tokenMetrics,

@@ -26,7 +26,9 @@ export const getTokenMetrics = async (path: string): Promise<TokenMetrics> => {
     .map((line) => {
       try {
         const data = JSON.parse(line);
-        return data.message?.usage && data.isSidechain !== true && data.timestamp
+        return data.message?.usage &&
+          data.isSidechain !== true &&
+          data.timestamp
           ? data
           : null;
       } catch {
