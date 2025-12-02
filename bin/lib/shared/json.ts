@@ -2,16 +2,7 @@
  * JSON parsing and file utilities with safe error handling
  */
 
-import { safeRead } from "./fs.ts";
-
-/**
- * Wrap an async operation with a fallback value on error
- * @param operation - Promise to execute
- * @param fallback - Value to return on error
- * @returns Promise resolving to operation result or fallback on error
- */
-const withFallback = <T>(operation: Promise<T>, fallback: T): Promise<T> =>
-  operation.catch(() => fallback);
+import { safeRead, withFallback } from "./fs.ts";
 
 /**
  * Safely parse JSON string, returning empty object on error

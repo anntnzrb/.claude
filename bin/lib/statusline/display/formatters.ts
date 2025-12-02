@@ -13,7 +13,7 @@ import type {
  * Domain formatting utilities
  */
 export const formatters = {
-  model: (model: ModelInfo) => model.display_name || "Claude",
+  model: (model: ModelInfo) => model.display_name ?? "Claude",
   version: (version?: string) => (version ? `[v${version}]` : ""),
   style: (style: OutputStyle) =>
     style.name === "default" ? "🗣️ [Def]" : `🗣️ [${style.name}]`,

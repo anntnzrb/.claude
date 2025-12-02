@@ -23,12 +23,12 @@ export const logSession = (input: string, sessionId: string = "unknown") =>
   Bun.write(
     `/tmp/claude-statusline-${sessionId}.json`,
     `# JSON input captured on ${new Date().toISOString()}\n${input}\n`,
-  ).catch(() => {});
+  ).catch((e) => console.debug?.("logSession failed:", e));
 
 /**
  * Read JSON input from file argument or stdin
  * @param args - Command line arguments (first arg used as file path if provided)
  * @returns Promise resolving to input text content
  */
-export const readInput = (args: string[]) =>
+export const readInput = (args: string[]): Promise<string> =>
   args[0] ? Bun.file(args[0]).text() : new Response(Bun.stdin).text();

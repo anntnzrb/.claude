@@ -22,18 +22,18 @@ export const getTokenMetrics = async (path: string): Promise<TokenMetrics> => {
     .split("\n")
     .filter((line) => line.trim() && line.startsWith("{"));
 
-  const entries = await Promise.all(
-    lines.map((line) =>
-      Promise.resolve(line)
-        .then(JSON.parse)
-        .then((data) =>
-          data.message?.usage && data.isSidechain !== true && data.timestamp
-            ? data
-            : null,
-        )
-        .catch(() => null),
-    ),
-  ).then((results) => results.filter((entry) => entry !== null));
+  const entries = lines
+    .map((line) => {
+      try {
+        const data = JSON.parse(line);
+        return data.message?.usage && data.isSidechain !== true && data.timestamp
+          ? data
+          : null;
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry) => entry !== null);
 
   entries.sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
@@ -42,9 +42,9 @@ export const getTokenMetrics = async (path: string): Promise<TokenMetrics> => {
   const latest = entries.at(-1);
   return {
     contextLength: latest?.message?.usage
-      ? (latest.message.usage.input_tokens || 0) +
-        (latest.message.usage.cache_read_input_tokens || 0) +
-        (latest.message.usage.cache_creation_input_tokens || 0)
+      ? (latest.message.usage.input_tokens ?? 0) +
+        (latest.message.usage.cache_read_input_tokens ?? 0) +
+        (latest.message.usage.cache_creation_input_tokens ?? 0)
       : 0,
   };
 };

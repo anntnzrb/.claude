@@ -10,7 +10,7 @@ import { existsSync } from "fs";
  * @param fallback - Value to return on error
  * @returns Promise resolving to operation result or fallback on error
  */
-const withFallback = <T>(operation: Promise<T>, fallback: T): Promise<T> =>
+export const withFallback = <T>(operation: Promise<T>, fallback: T): Promise<T> =>
   operation.catch(() => fallback);
 
 /**
@@ -72,17 +72,16 @@ export const parseJsonlFile = async <T>(
   const content = await safeRead(path);
   if (!content) return [];
 
-  const results = await Promise.all(
-    content
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) =>
-        withFallback(
-          Promise.resolve(line).then(JSON.parse).then(parseLine),
-          null,
-        ),
-      ),
-  );
+  const results = content
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line) => {
+      try {
+        return parseLine(JSON.parse(line));
+      } catch {
+        return null;
+      }
+    });
 
   return results.filter((r): r is T => r !== null);
 };
