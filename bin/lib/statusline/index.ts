@@ -29,10 +29,22 @@ const enrichData = async (
   logSession(input, data.session_id);
   const [cwd, msgCount, tokenMetrics] = await Promise.all([
     getDisplayPath(data.workspace, data.cwd),
-    countUserMessages(data.transcript_path || ""),
-    getTokenMetrics(data.transcript_path || ""),
+    countUserMessages(data.transcript_path ?? ""),
+    getTokenMetrics(data.transcript_path ?? ""),
   ]);
-  return { ...data, cwd, msgCount, tokenMetrics } as EnrichedStatusLineData;
+  return {
+    session_id: data.session_id ?? "",
+    transcript_path: data.transcript_path ?? "",
+    cwd,
+    model: data.model ?? { id: "", display_name: "Claude" },
+    workspace: data.workspace ?? { current_dir: "", project_dir: "" },
+    version: data.version ?? "",
+    output_style: data.output_style ?? { name: "default" },
+    cost: data.cost ?? { total_cost_usd: 0, total_duration_ms: 0, total_api_duration_ms: 0 },
+    exceeds_200k_tokens: data.exceeds_200k_tokens ?? false,
+    msgCount,
+    tokenMetrics,
+  };
 };
 
 /**

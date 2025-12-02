@@ -18,12 +18,12 @@ export const buildMcpServers = (mcpArray: McpServer[]): McpServersMap =>
   mcpArray
     .filter((server) => !server.disabled)
     .reduce((acc, { name, command, url, env, disabled, ...rest }) => {
-      const parts = command?.split(" ") || [];
+      const parts = command?.trim().split(/\s+/).filter(Boolean) || [];
       return {
         ...acc,
         [name]: {
           ...rest,
-          ...(command && {
+          ...(parts[0] && {
             type: "stdio",
             command: parts[0],
             args: parts.slice(1),

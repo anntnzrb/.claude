@@ -7,7 +7,7 @@ import { dirname, join } from "path";
 import { safeDelete } from "../shared/fs.ts";
 import { safeJsonRead, safeJsonWrite } from "../shared/json.ts";
 
-const MANIFEST_PATH = () => `/tmp/claude-symlinks-${process.pid}.json`;
+const MANIFEST_PATH = `/tmp/claude-symlinks-${process.pid}-${Date.now()}.json`;
 
 /**
  * Create CLAUDE.md symlinks next to AGENTS.md files and save manifest
@@ -33,7 +33,7 @@ export const createAndSaveSymlinks = async (cwd: string): Promise<void> => {
       .catch(() => console.warn(`Failed to symlink: ${claudeMdPath}`));
   }
 
-  await safeJsonWrite(MANIFEST_PATH(), created);
+  await safeJsonWrite(MANIFEST_PATH, created);
 };
 
 /**
@@ -41,10 +41,10 @@ export const createAndSaveSymlinks = async (cwd: string): Promise<void> => {
  * @returns Promise that resolves when all symlinks are removed
  */
 export const cleanupAgentsSymlinks = async (): Promise<void> => {
-  const manifestPath = MANIFEST_PATH();
-  if (!existsSync(manifestPath)) return;
+  if (!existsSync(MANIFEST_PATH)) return;
 
-  const symlinks = (await safeJsonRead<string[]>(manifestPath)) || [];
+  const result = await safeJsonRead<string[]>(MANIFEST_PATH);
+  const symlinks = Array.isArray(result) ? result : [];
   await Promise.all(symlinks.map(safeDelete));
-  await safeDelete(manifestPath);
+  await safeDelete(MANIFEST_PATH);
 };

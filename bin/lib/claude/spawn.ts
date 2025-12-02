@@ -55,7 +55,8 @@ export const spawnClaude = async (
   isGlmMode = false,
   isMiniMaxMode = false,
 ): Promise<Subprocess> => {
-  const mcpArray = (await safeJsonRead<McpServer[]>(paths.mcp)) || [];
+  const mcpResult = await safeJsonRead<McpServer[]>(paths.mcp);
+  const mcpArray = Array.isArray(mcpResult) ? mcpResult : [];
   const mcpServers = buildMcpServers(mcpArray);
 
   const claudeArgs = [

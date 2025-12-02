@@ -70,4 +70,10 @@ const main = async () => {
   process.exit(0);
 };
 
-main().catch((err) => cleanup().finally(() => die(err)));
+main().catch(async (err) => {
+  try {
+    await cleanup();
+  } finally {
+    die(err instanceof Error ? err : String(err));
+  }
+});

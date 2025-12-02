@@ -28,9 +28,11 @@ export const getDisplayPath = async (
     await Bun.$`cd ${path} && git rev-parse --show-toplevel 2>/dev/null`
       .quiet()
       .then(({ stdout }) => {
-        if (stdout.trim()) {
-          const repoRoot = stdout.trim();
-          const relPath = path.replace(repoRoot, "").replace(/^\//, "") || ".";
+        const repoRoot = stdout.trim();
+        if (repoRoot) {
+          const relPath = path.startsWith(repoRoot)
+            ? path.slice(repoRoot.length).replace(/^\//, "") || "."
+            : ".";
           return relPath === "."
             ? basename(repoRoot)
             : `${basename(repoRoot)}/${relPath}`;
