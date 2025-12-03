@@ -1,6 +1,7 @@
 ---
 name: youtube
-description: Interact with yt-dlp CLI for downloading and processing videos. Activate when user mentions yt-dlp, downloading YouTube videos, extracting audio, converting formats, or video processing tasks.
+description: Work with video and audio links. Activate when user shares a YouTube link, video URL, or any media link - regardless of the task (download, info, convert, extract, list, or explore). Uses yt-dlp for all operations.
+allowed-tools: Bash, Read, Task, Glob, Grep
 ---
 
 # yt-dlp Video Downloader Skill
