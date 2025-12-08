@@ -1,24 +1,14 @@
-# Async/Await Reference
+# Async/Await Cookbook
 
 Deep dive into async programming in Python 3.14+.
 
-## Table of Contents
-
-1. [Structured Concurrency](#structured-concurrency)
-2. [Async Generators](#async-generators)
-3. [Async Context Managers](#async-context-managers)
-4. [HTTP with httpx](#http-with-httpx)
-5. [Error Handling](#error-handling)
-6. [Common Patterns](#common-patterns)
-
 ---
 
-## Structured Concurrency
+## Running Concurrent Tasks with TaskGroup
 
-### TaskGroup (3.11+)
+**Problem**: You need to run multiple async operations concurrently with proper error handling and automatic cleanup.
 
-The recommended way to run concurrent tasks with proper error handling:
-
+**Solution**:
 ```python
 import asyncio
 
@@ -40,8 +30,15 @@ async def main():
 asyncio.run(main())
 ```
 
-### asyncio.gather (legacy but useful)
+**Tip**: TaskGroup (Python 3.11+) is the recommended way for structured concurrency. It ensures all tasks complete before exiting the context and properly propagates exceptions.
 
+---
+
+## Gathering Multiple Results
+
+**Problem**: You need to collect results from multiple async operations running in parallel.
+
+**Solution**:
 ```python
 async def fetch_all(urls: list[str]) -> list[str]:
     tasks = [fetch_data(url) for url in urls]
@@ -59,8 +56,15 @@ async def fetch_all_safe(urls: list[str]):
     return successes, errors
 ```
 
-### Timeouts
+**Tip**: Use `return_exceptions=True` to handle partial failures gracefully. Without it, any single failure will raise an exception immediately.
 
+---
+
+## Adding Timeouts to Async Operations
+
+**Problem**: You need to ensure async operations don't run indefinitely.
+
+**Solution**:
 ```python
 async def with_timeout():
     try:
@@ -78,12 +82,15 @@ except asyncio.TimeoutError:
     print("Timed out")
 ```
 
+**Tip**: Prefer `asyncio.timeout()` context manager (Python 3.11+) over `wait_for()` for cleaner timeout handling.
+
 ---
 
-## Async Generators
+## Creating Async Generators
 
-### Basic Async Generator
+**Problem**: You need to yield values asynchronously, processing data as it becomes available.
 
+**Solution**:
 ```python
 from typing import AsyncGenerator
 
@@ -97,8 +104,15 @@ async def consume():
         print(value)
 ```
 
-### Async Comprehensions
+**Tip**: Use async generators for streaming data, paginated API responses, or any scenario where you want to process items as they arrive rather than waiting for all data.
 
+---
+
+## Using Async Comprehensions
+
+**Problem**: You want to build collections from async generators concisely.
+
+**Solution**:
 ```python
 async def get_items() -> list[int]:
     return [i async for i in async_range(10)]
@@ -107,8 +121,15 @@ async def filter_items() -> list[int]:
     return [i async for i in async_range(10) if i % 2 == 0]
 ```
 
-### Async Generator with Cleanup
+**Tip**: Async comprehensions work just like regular comprehensions but use `async for` to iterate over async iterables.
 
+---
+
+## Cleaning Up Async Generators
+
+**Problem**: You need to ensure cleanup happens when an async generator is done or interrupted.
+
+**Solution**:
 ```python
 async def stream_data():
     try:
@@ -118,12 +139,15 @@ async def stream_data():
         await cleanup_connection()
 ```
 
+**Tip**: Always use try/finally blocks in async generators to guarantee cleanup code runs, even if the generator is closed early.
+
 ---
 
-## Async Context Managers
+## Creating Class-Based Async Context Managers
 
-### Class-Based
+**Problem**: You need to manage async resources with setup and teardown logic.
 
+**Solution**:
 ```python
 class AsyncDatabaseConnection:
     async def __aenter__(self):
@@ -141,8 +165,15 @@ async def use_db():
         print("Using connection")
 ```
 
-### Decorator-Based
+**Tip**: Return `False` from `__aexit__` to let exceptions propagate. Only return `True` if you want to suppress exceptions.
 
+---
+
+## Creating Decorator-Based Async Context Managers
+
+**Problem**: You want to create simple async context managers without defining a full class.
+
+**Solution**:
 ```python
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -162,12 +193,15 @@ async def timed_operation():
         await fetch_data("url")
 ```
 
+**Tip**: Use `@asynccontextmanager` for one-off context managers. It's more concise than defining a class with `__aenter__` and `__aexit__`.
+
 ---
 
-## HTTP with httpx
+## Making HTTP Requests with httpx
 
-### AsyncClient Basics
+**Problem**: You need to make async HTTP requests efficiently.
 
+**Solution**:
 ```python
 import httpx
 
@@ -184,8 +218,15 @@ async def post_data(url: str, data: dict) -> dict:
         return response.json()
 ```
 
-### Reusing Client (recommended)
+**Tip**: Always use `async with` to ensure the client is properly closed. Never use the synchronous `requests` library in async code.
 
+---
+
+## Reusing HTTP Client for Multiple Requests
+
+**Problem**: You need to make multiple HTTP requests and want to reuse connections for better performance.
+
+**Solution**:
 ```python
 async def fetch_multiple(urls: list[str]) -> list[dict]:
     async with httpx.AsyncClient() as client:
@@ -197,8 +238,15 @@ async def fetch_multiple(urls: list[str]) -> list[dict]:
         return [t.result().json() for t in tasks]
 ```
 
-### With Timeout and Retry
+**Tip**: Reusing a single AsyncClient across multiple requests enables connection pooling and significantly improves performance.
 
+---
+
+## Adding Retry Logic to HTTP Requests
+
+**Problem**: You need to automatically retry failed HTTP requests with backoff.
+
+**Solution**:
 ```python
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -211,12 +259,15 @@ async def fetch_with_retry(url: str) -> dict:
         return response.json()
 ```
 
+**Tip**: Use the `tenacity` library for robust retry logic with exponential backoff. Combine with timeouts to prevent hanging requests.
+
 ---
 
-## Error Handling
+## Handling Exception Groups
 
-### Exception Groups (3.11+)
+**Problem**: You need to handle different types of exceptions from multiple concurrent tasks.
 
+**Solution**:
 ```python
 async def run_tasks():
     try:
@@ -230,8 +281,15 @@ async def run_tasks():
         print(f"TypeError(s): {eg.exceptions}")
 ```
 
-### Graceful Degradation
+**Tip**: Use `except*` syntax (Python 3.11+) to handle exception groups from TaskGroup. It allows you to handle different exception types separately.
 
+---
+
+## Implementing Graceful Degradation
+
+**Problem**: You want your async code to continue working even if some operations fail.
+
+**Solution**:
 ```python
 async def fetch_with_fallback(primary: str, fallback: str) -> str:
     try:
@@ -247,12 +305,15 @@ async def fetch_best_effort(urls: list[str]) -> list[str]:
     return [r for r in results if isinstance(r, str)]
 ```
 
+**Tip**: Use fallbacks for critical operations and filter out exceptions for best-effort batch operations.
+
 ---
 
-## Common Patterns
+## Running Blocking Code in Async Context
 
-### Run Blocking Code in Thread
+**Problem**: You need to run blocking I/O or CPU-intensive code without blocking the event loop.
 
+**Solution**:
 ```python
 import asyncio
 
@@ -267,8 +328,15 @@ async def main():
     print(result)
 ```
 
-### Semaphore for Rate Limiting
+**Tip**: Always use `asyncio.to_thread()` for blocking operations. Never call blocking functions directly in async code or use `time.sleep()`.
 
+---
+
+## Rate Limiting with Semaphores
+
+**Problem**: You need to limit the number of concurrent async operations.
+
+**Solution**:
 ```python
 async def fetch_with_limit(urls: list[str], max_concurrent: int = 10):
     semaphore = asyncio.Semaphore(max_concurrent)
@@ -280,8 +348,15 @@ async def fetch_with_limit(urls: list[str], max_concurrent: int = 10):
     return await asyncio.gather(*[limited_fetch(url) for url in urls])
 ```
 
-### Event for Coordination
+**Tip**: Use semaphores to prevent overwhelming external services or exhausting system resources when making many concurrent requests.
 
+---
+
+## Coordinating Tasks with Events
+
+**Problem**: You need to signal between async tasks or wait for a specific condition.
+
+**Solution**:
 ```python
 async def waiter(event: asyncio.Event):
     print("Waiting...")
@@ -297,8 +372,15 @@ async def main():
     await asyncio.gather(waiter(event), setter(event))
 ```
 
-### Queue for Producer-Consumer
+**Tip**: Events are useful for simple signaling between tasks. For passing data, use Queues instead.
 
+---
+
+## Producer-Consumer Pattern with Queues
+
+**Problem**: You need to process items asynchronously with separate producer and consumer tasks.
+
+**Solution**:
 ```python
 async def producer(queue: asyncio.Queue):
     for i in range(10):
@@ -319,8 +401,15 @@ async def main():
     await asyncio.gather(producer(queue), consumer(queue))
 ```
 
-### Lock for Shared State
+**Tip**: Use a sentinel value (like `None`) to signal when the producer is done. Call `task_done()` after processing each item for proper queue tracking.
 
+---
+
+## Protecting Shared State with Locks
+
+**Problem**: You need to safely access and modify shared state from multiple async tasks.
+
+**Solution**:
 ```python
 class AsyncCounter:
     def __init__(self):
@@ -333,9 +422,15 @@ class AsyncCounter:
             return self.value
 ```
 
+**Tip**: Always use locks when multiple tasks access shared mutable state. Without locks, you risk race conditions even in async code.
+
 ---
 
-## Anti-Patterns
+## Anti-Patterns to Avoid
+
+**Problem**: You want to avoid common mistakes in async Python code.
+
+**Solution**:
 
 | Avoid | Do Instead |
 |-------|------------|
@@ -345,10 +440,15 @@ class AsyncCounter:
 | Global event loop | `asyncio.run(main())` |
 | `loop.run_until_complete()` | `asyncio.run()` |
 
+**Tip**: Blocking calls in async code will freeze the entire event loop. Always use async equivalents and prefer modern APIs like TaskGroup and `asyncio.run()`.
+
 ---
 
 ## Quick Reference
 
+**Problem**: You need a quick lookup of common async patterns.
+
+**Solution**:
 ```python
 # Run async code
 asyncio.run(main())
@@ -374,3 +474,5 @@ await asyncio.to_thread(blocking_fn)
 async with semaphore:
     await limited_op()
 ```
+
+**Tip**: Bookmark this reference for quick access to the most common async patterns in Python 3.11+.

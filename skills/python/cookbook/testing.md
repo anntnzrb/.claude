@@ -1,21 +1,14 @@
-# Testing Reference
+# Testing Cookbook
 
 pytest patterns and fixtures for Python 3.14+.
 
-## Table of Contents
-
-1. [Setup](#setup)
-2. [Basic Tests](#basic-tests)
-3. [Fixtures](#fixtures)
-4. [Parametrize](#parametrize)
-5. [Async Testing](#async-testing)
-6. [Mocking](#mocking)
-7. [Coverage](#coverage)
-
 ---
 
-## Setup
+## Setup pytest with Coverage
 
+**Problem**: Need to configure pytest with coverage reporting and best practices for a Python project.
+
+**Solution**:
 ```bash
 uv add --dev pytest pytest-cov pytest-asyncio
 ```
@@ -40,12 +33,15 @@ markers = [
 asyncio_mode = "auto"
 ```
 
+**Tip**: Use `asyncio_mode = "auto"` to avoid decorating every async test with `@pytest.mark.asyncio`.
+
 ---
 
-## Basic Tests
+## Write Basic Unit Tests
 
-### Test Structure
+**Problem**: Need to test class methods, validation, and equality in a structured way.
 
+**Solution**:
 ```python
 # tests/test_entities.py
 import pytest
@@ -68,8 +64,15 @@ class TestUser:
         assert user1 == user2
 ```
 
-### Testing Exceptions
+**Tip**: Group related tests in classes with the `Test` prefix for better organization and shared setup.
 
+---
+
+## Test Exceptions
+
+**Problem**: Need to verify that code raises the correct exceptions with specific messages.
+
+**Solution**:
 ```python
 def test_division_by_zero():
     with pytest.raises(ZeroDivisionError):
@@ -80,8 +83,15 @@ def test_value_error_message():
         create_user(age=-1)
 ```
 
-### Approximate Comparisons
+**Tip**: Use the `match` parameter with a regex pattern to verify exception messages contain expected text.
 
+---
+
+## Compare Floating Point Numbers
+
+**Problem**: Floating point arithmetic can produce slightly different results that fail equality checks.
+
+**Solution**:
 ```python
 def test_float_comparison():
     result = 0.1 + 0.2
@@ -92,12 +102,15 @@ def test_with_tolerance():
     assert 2.0 == pytest.approx(2.02, rel=0.02)
 ```
 
+**Tip**: Use `abs` for absolute tolerance (fixed margin) or `rel` for relative tolerance (percentage-based).
+
 ---
 
-## Fixtures
+## Create Reusable Test Fixtures
 
-### Basic Fixtures
+**Problem**: Tests need shared setup objects like users or database connections with proper cleanup.
 
+**Solution**:
 ```python
 # tests/conftest.py
 import pytest
@@ -123,8 +136,15 @@ def test_save_user(database, user):
     assert database.get_user(user.id) == user
 ```
 
-### Fixture Scopes
+**Tip**: Use `yield` in fixtures to run cleanup code after the test completes, ensuring resources are properly released.
 
+---
+
+## Control Fixture Scope
+
+**Problem**: Some fixtures are expensive to create and should be shared across multiple tests.
+
+**Solution**:
 ```python
 @pytest.fixture(scope="session")
 def app():
@@ -148,8 +168,15 @@ def temp_file():
         yield f
 ```
 
-### Parameterized Fixtures
+**Tip**: Use `scope="session"` for expensive one-time setup like database connections, and `scope="function"` (default) for test isolation.
 
+---
+
+## Run Tests with Multiple Backend Implementations
+
+**Problem**: Need to verify code works with different database backends or configurations.
+
+**Solution**:
 ```python
 @pytest.fixture(params=["postgres", "mysql", "sqlite"])
 def database(request):
@@ -160,8 +187,15 @@ def database(request):
     db.close()
 ```
 
-### Factory Fixtures
+**Tip**: Parameterized fixtures automatically run all tests using the fixture multiple times, once per parameter value.
 
+---
+
+## Create Factory Fixtures
+
+**Problem**: Need to create multiple instances of an object with different attributes in a single test.
+
+**Solution**:
 ```python
 @pytest.fixture
 def make_user():
@@ -176,12 +210,15 @@ def test_multiple_users(make_user):
     assert alice.name != bob.name
 ```
 
+**Tip**: Factory fixtures return a callable function, allowing flexible object creation with custom parameters in each test.
+
 ---
 
-## Parametrize
+## Test with Multiple Input Values
 
-### Basic Parametrize
+**Problem**: Need to test the same function with many different input/output combinations.
 
+**Solution**:
 ```python
 @pytest.mark.parametrize("input,expected", [
     (1, 2),
@@ -194,20 +231,15 @@ def test_double(input, expected):
     assert double(input) == expected
 ```
 
-### Multiple Parameters
+**Tip**: Parametrize creates a separate test for each tuple, making it easy to spot which specific inputs fail.
 
-```python
-@pytest.mark.parametrize("x,y,expected", [
-    (1, 2, 3),
-    (0, 0, 0),
-    (-1, 1, 0),
-])
-def test_add(x, y, expected):
-    assert add(x, y) == expected
-```
+---
 
-### Combining Parametrize
+## Test All Combinations of Parameters
 
+**Problem**: Need to test a function with every combination of two or more parameter sets.
+
+**Solution**:
 ```python
 @pytest.mark.parametrize("x", [1, 2, 3])
 @pytest.mark.parametrize("y", [10, 20])
@@ -216,8 +248,15 @@ def test_multiply(x, y):
     assert multiply(x, y) == x * y
 ```
 
-### IDs for Clarity
+**Tip**: Stacking multiple `@pytest.mark.parametrize` decorators creates the cartesian product of all parameters.
 
+---
+
+## Add Descriptive Test IDs
+
+**Problem**: Parametrized test names like `test_age[0]` don't clearly indicate what's being tested.
+
+**Solution**:
 ```python
 @pytest.mark.parametrize("age,valid", [
     pytest.param(18, True, id="adult"),
@@ -234,12 +273,15 @@ def test_age_validation(age, valid):
             User(name="Test", age=age)
 ```
 
+**Tip**: Custom IDs make test output readable: `test_age_validation[adult]` instead of `test_age_validation[18-True]`.
+
 ---
 
-## Async Testing
+## Test Async Functions
 
-### Basic Async Tests
+**Problem**: Need to test asynchronous functions and coroutines.
 
+**Solution**:
 ```python
 # tests/test_async.py
 import pytest
@@ -258,8 +300,15 @@ async def test_fetch_multiple_users():
     assert len(users) == 3
 ```
 
-### Async Fixtures
+**Tip**: With `asyncio_mode = "auto"` in config, you can omit the `@pytest.mark.asyncio` decorator.
 
+---
+
+## Create Async Fixtures
+
+**Problem**: Tests need async setup like HTTP clients or database connections.
+
+**Solution**:
 ```python
 @pytest.fixture
 async def async_client():
@@ -273,27 +322,15 @@ async def test_api_call(async_client):
     assert response.status_code == 200
 ```
 
-### Auto Mode (pytest-asyncio)
-
-```toml
-# pyproject.toml
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-```
-
-```python
-# No need for @pytest.mark.asyncio with auto mode
-async def test_async_operation():
-    result = await async_function()
-    assert result is not None
-```
+**Tip**: Async fixtures automatically handle async context managers and cleanup with async generators.
 
 ---
 
-## Mocking
+## Mock External Dependencies
 
-### Basic Mocking
+**Problem**: Tests shouldn't call real databases or external APIs.
 
+**Solution**:
 ```python
 from unittest.mock import Mock, patch, AsyncMock
 
@@ -308,8 +345,15 @@ def test_with_mock():
     mock_db.query.assert_called_once()
 ```
 
-### Patching
+**Tip**: Use `return_value` to set what the mock returns, and `assert_called_once()` to verify it was used correctly.
 
+---
+
+## Patch Module-Level Functions
+
+**Problem**: Need to mock imported functions like `requests.get` without modifying the code under test.
+
+**Solution**:
 ```python
 @patch("my_project.services.requests.get")
 def test_external_api(mock_get):
@@ -327,8 +371,15 @@ def test_with_context_manager():
         assert result == []
 ```
 
-### Async Mocking
+**Tip**: Use the full import path where the function is used, not where it's defined: `my_project.services.requests`, not `requests`.
 
+---
+
+## Mock Async Functions
+
+**Problem**: Need to mock async functions and verify they were awaited.
+
+**Solution**:
 ```python
 @pytest.fixture
 async def mock_api():
@@ -345,8 +396,15 @@ async def test_async_service(mock_api):
     mock_api.fetch.assert_awaited_once()
 ```
 
-### MagicMock for Special Methods
+**Tip**: Use `AsyncMock` instead of `Mock` for async functions, and `assert_awaited_once()` instead of `assert_called_once()`.
 
+---
+
+## Mock Context Managers
+
+**Problem**: Need to mock objects that use `__enter__` and `__exit__` like file handles.
+
+**Solution**:
 ```python
 from unittest.mock import MagicMock
 
@@ -359,8 +417,15 @@ def test_context_manager():
         assert f.read() == "content"
 ```
 
-### Spy (wrap real object)
+**Tip**: `MagicMock` automatically implements magic methods like `__enter__`, `__exit__`, `__len__`, and `__iter__`.
 
+---
+
+## Spy on Real Objects
+
+**Problem**: Want to verify a method was called while still executing the real implementation.
+
+**Solution**:
 ```python
 from unittest.mock import patch
 
@@ -372,12 +437,15 @@ def test_spy_on_method():
         spy.assert_called_once()
 ```
 
+**Tip**: The `wraps` parameter creates a spy that tracks calls but still executes the original method.
+
 ---
 
-## Coverage
+## Generate Coverage Reports
 
-### Run with Coverage
+**Problem**: Need to know which lines of code are tested and identify gaps.
 
+**Solution**:
 ```bash
 # Basic coverage
 uv run pytest --cov=src
@@ -393,8 +461,15 @@ open htmlcov/index.html
 uv run pytest --cov=src --cov-fail-under=80
 ```
 
-### Coverage Configuration
+**Tip**: Use `--cov-report=term-missing` during development to quickly see uncovered lines, and HTML reports for detailed analysis.
 
+---
+
+## Configure Coverage Exclusions
+
+**Problem**: Some lines like debug code or type checking shouldn't count against coverage.
+
+**Solution**:
 ```toml
 # pyproject.toml
 [tool.coverage.run]
@@ -412,10 +487,15 @@ exclude_lines = [
 fail_under = 80
 ```
 
+**Tip**: Enable `branch = true` to measure branch coverage, not just line coverage, for more thorough testing.
+
 ---
 
-## Test Organization
+## Organize Tests by Type
 
+**Problem**: Large projects need structure to separate unit, integration, and end-to-end tests.
+
+**Solution**:
 ```
 tests/
 ├── conftest.py           # Shared fixtures
@@ -428,8 +508,15 @@ tests/
     └── test_workflow.py
 ```
 
-### Markers
+**Tip**: Place shared fixtures in `conftest.py` at each level to make them available to all tests in that directory and subdirectories.
 
+---
+
+## Mark Tests by Category
+
+**Problem**: Need to selectively run slow tests, integration tests, or exclude certain categories.
+
+**Solution**:
 ```python
 import pytest
 
@@ -448,10 +535,15 @@ def test_database_integration():
 # uv run pytest -m integration
 ```
 
+**Tip**: Define markers in `pyproject.toml` with descriptions to document what each marker means and enable `--strict-markers`.
+
 ---
 
-## Quick Reference
+## Common pytest Commands
 
+**Problem**: Need quick reference for running tests in different ways during development.
+
+**Solution**:
 ```bash
 # Run all tests
 uv run pytest
@@ -477,3 +569,7 @@ uv run pytest --lf
 # Parallel execution (requires pytest-xdist)
 uv run pytest -n auto
 ```
+
+**Tip**: Use `pytest -x --lf` during development to quickly iterate: stop on first failure, then rerun only failures on next run.
+
+---

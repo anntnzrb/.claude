@@ -259,8 +259,9 @@ myapp/
 
 ## References
 
-- [patterns.md](patterns.md) - Functional patterns, data structures, lazy sequences
-- [concurrency.md](concurrency.md) - Atoms, refs, agents, core.async
-- [spec.md](spec.md) - clojure.spec validation & generative testing
-- [testing.md](testing.md) - clojure.test, Kaocha configuration
-- [macros.md](macros.md) - Metaprogramming patterns
+- [reference.md](reference.md) - Data structures, best practices, idioms, error handling
+- [patterns.md](cookbook/patterns.md) - Functional patterns, sequences, transducers
+- [concurrency.md](cookbook/concurrency.md) - Atoms, refs, agents, core.async
+- [spec.md](cookbook/spec.md) - clojure.spec validation & generative testing
+- [testing.md](cookbook/testing.md) - clojure.test, Kaocha configuration
+- [macros.md](cookbook/macros.md) - Metaprogramming patterns

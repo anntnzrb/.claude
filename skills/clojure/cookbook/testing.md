@@ -1,9 +1,14 @@
-# Testing Patterns
+# Clojure Testing Cookbook
 
-## clojure.test (Built-in)
+Practical recipes for testing Clojure applications with clojure.test, Kaocha, and test.check.
 
-### Basic Tests
+---
 
+## Write Basic Unit Tests
+
+**Problem**: You need to write simple unit tests for your Clojure functions.
+
+**Solution**:
 ```clojure
 (ns myapp.core-test
   (:require [clojure.test :refer [deftest is testing are]]
@@ -23,8 +28,15 @@
     (is (= 0 (core/multiply 0 5)))))
 ```
 
-### Assertions
+**Tip**: Use `testing` blocks to group related assertions and provide better error messages when tests fail.
 
+---
+
+## Test Different Assertion Types
+
+**Problem**: You need to test equality, truthiness, types, and exceptions.
+
+**Solution**:
 ```clojure
 ;; Equality
 (is (= expected actual))
@@ -47,8 +59,15 @@
 (is (= 4 (+ 2 2)) "Math is broken!")
 ```
 
-### Table-Driven Tests with `are`
+**Tip**: Add custom messages to assertions to make failures easier to understand, especially in complex test scenarios.
 
+---
+
+## Write Table-Driven Tests
+
+**Problem**: You need to test the same function with multiple input/output pairs without duplicating test code.
+
+**Solution**:
 ```clojure
 (deftest test-fizzbuzz
   (are [n expected]
@@ -60,8 +79,15 @@
     30 "FizzBuzz"))
 ```
 
-### Fixtures
+**Tip**: Use `are` for table-driven tests where you have many similar test cases. The first row defines the pattern, and subsequent rows provide the test data.
 
+---
+
+## Set Up Test Fixtures
+
+**Problem**: You need to run setup and teardown code before and after tests.
+
+**Solution**:
 ```clojure
 ;; Per-test fixture
 (defn setup-fixture [f]
@@ -84,8 +110,15 @@
   (compose-fixtures setup-fixture logging-fixture))
 ```
 
-### Async Testing
+**Tip**: Use `:each` for fixtures that need to run before/after every test, and `:once` for expensive setup that can be shared across all tests in a namespace.
 
+---
+
+## Test Async Operations
+
+**Problem**: You need to test asynchronous code with promises or core.async channels.
+
+**Solution**:
 ```clojure
 ;; Test async with promises
 (deftest test-async-operation
@@ -104,10 +137,15 @@
     (is (= :value (a/<!! result)))))
 ```
 
-## Kaocha (Test Runner)
+**Tip**: Always use timeouts when dereferencing promises or blocking on channels to prevent tests from hanging indefinitely.
 
-### Setup
+---
 
+## Configure Kaocha Test Runner
+
+**Problem**: You need a modern test runner with watch mode and better output.
+
+**Solution**:
 ```clojure
 ;; deps.edn
 {:aliases
@@ -124,9 +162,8 @@
    :exec-args {:watch? true :fail-fast? true}}}}
 ```
 
-### Configuration (tests.edn)
-
 ```clojure
+;; tests.edn
 #kaocha/v1
 {:tests [{:id :unit
           :test-paths ["test"]
@@ -140,8 +177,15 @@
  :color? true}
 ```
 
-### Running Tests
+**Tip**: Use separate aliases for running tests once vs. in watch mode. Watch mode automatically re-runs tests when files change.
 
+---
+
+## Run Tests with Kaocha
+
+**Problem**: You need to run tests with different options like focusing on specific tests or skipping slow ones.
+
+**Solution**:
 ```bash
 # Run all tests
 clojure -X:test/run
@@ -159,8 +203,15 @@ clojure -X:test/run :fail-fast? true
 clojure -X:test/run :skip-meta :slow
 ```
 
-### Metadata Filtering
+**Tip**: Use `:fail-fast? true` during development to stop at the first failure and fix issues quickly.
 
+---
+
+## Filter Tests with Metadata
+
+**Problem**: You want to mark and selectively run slow, integration, or database tests.
+
+**Solution**:
 ```clojure
 ;; Mark slow tests
 (deftest ^:slow test-integration
@@ -174,10 +225,15 @@ clojure -X:test/run :skip-meta :slow
   ...)
 ```
 
-## Test Helpers
+**Tip**: Tag slow tests with `^:slow` and skip them during regular development, but include them in CI pipelines.
 
-### Test Data Builders
+---
 
+## Build Test Data
+
+**Problem**: You need to create test data with sensible defaults but allow customization.
+
+**Solution**:
 ```clojure
 (defn make-user
   ([] (make-user {}))
@@ -193,8 +249,15 @@ clojure -X:test/run :skip-meta :slow
     (is (= :admin (:role admin)))))
 ```
 
-### Testing Side Effects
+**Tip**: Test data builders make tests more readable and maintainable. Override only the fields that matter for each specific test.
 
+---
+
+## Test Side Effects
+
+**Problem**: You need to test code that performs side effects like logging or HTTP calls.
+
+**Solution**:
 ```clojure
 ;; Capture side effects
 (deftest test-logging
@@ -209,8 +272,15 @@ clojure -X:test/run :skip-meta :slow
     (is (= :ok (fetch-data)))))
 ```
 
-### Testing Exceptions
+**Tip**: Use `with-redefs` to temporarily replace functions during tests. Capture side effects in atoms or return fixed values for external dependencies.
 
+---
+
+## Test and Inspect Exceptions
+
+**Problem**: You need to verify that code throws exceptions with specific types and messages.
+
+**Solution**:
 ```clojure
 (deftest test-validation-errors
   ;; Throws any exception
@@ -229,8 +299,15 @@ clojure -X:test/run :skip-meta :slow
     (is (contains? (ex-data ex) :field))))
 ```
 
-### Testing Private Functions
+**Tip**: For detailed exception testing, catch the exception and inspect its `ex-data` to verify error details beyond just the message.
 
+---
+
+## Test Private Functions
+
+**Problem**: You need to test a private function directly.
+
+**Solution**:
 ```clojure
 ;; Access private var
 (deftest test-private
@@ -240,10 +317,15 @@ clojure -X:test/run :skip-meta :slow
 ;; Better: test through public API
 ```
 
-## Property-Based Testing
+**Tip**: While you can test private functions using `#'namespace/private-fn`, it's usually better to test them indirectly through the public API.
 
-### With test.check
+---
 
+## Write Property-Based Tests
+
+**Problem**: You want to test properties that should hold for many generated inputs, not just specific examples.
+
+**Solution**:
 ```clojure
 (require '[clojure.test.check :as tc]
          '[clojure.test.check.generators :as gen]
@@ -259,8 +341,15 @@ clojure -X:test/run :skip-meta :slow
     (= (sort v) (sort (sort v)))))
 ```
 
-### Custom Generators
+**Tip**: Property-based testing is great for testing invariants like idempotency, commutativity, or round-trip conversions. The number (100) specifies how many random inputs to test.
 
+---
+
+## Create Custom Generators
+
+**Problem**: You need to generate complex domain-specific test data for property-based tests.
+
+**Solution**:
 ```clojure
 ;; Composite generator
 (def user-gen
@@ -276,10 +365,15 @@ clojure -X:test/run :skip-meta :slow
            (= (:id user) (:id result))))))
 ```
 
-## Test Organization
+**Tip**: Compose generators from simpler ones using `gen/hash-map`, `gen/vector`, and other combinators. Add constraints with functions like `gen/not-empty` and `gen/choose`.
 
-### Directory Structure
+---
 
+## Organize Test Code
+
+**Problem**: You need a clear structure for organizing tests, fixtures, and helpers.
+
+**Solution**:
 ```
 test/
 ├── myapp/
@@ -293,8 +387,6 @@ test/
     └── test_utils.clj
 ```
 
-### Test Namespaces
-
 ```clojure
 ;; Unit tests mirror source structure
 ;; src/myapp/core.clj -> test/myapp/core_test.clj
@@ -305,8 +397,15 @@ test/
             [myapp.test-helpers :as h]))
 ```
 
-### Shared Test Utilities
+**Tip**: Mirror your source directory structure in tests with `_test.clj` suffix. Keep shared fixtures and helpers in separate directories.
 
+---
+
+## Create Shared Test Utilities
+
+**Problem**: You need to share common test setup code, fixtures, and macros across multiple test namespaces.
+
+**Solution**:
 ```clojure
 ;; test/myapp/test_helpers.clj
 (ns myapp.test-helpers
@@ -324,3 +423,7 @@ test/
   `(let [f# (future ~@body)]
      (deref f# ~ms :timeout)))
 ```
+
+**Tip**: Create a dedicated test helpers namespace for shared fixtures, test data builders, and testing macros. This reduces duplication and makes tests more maintainable.
+
+---

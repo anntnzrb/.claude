@@ -1,15 +1,14 @@
-# Modern Python Features
+# Modern Python Cookbook
 
-Key features from Python 3.8 through 3.14.
+Key features from Python 3.8 through 3.14, organized as practical recipes.
 
 ---
 
-## Python 3.8
+## Walrus Operator (3.8+)
 
-### Walrus Operator `:=`
+**Problem**: You need to assign a value and use it in an expression without splitting into multiple lines.
 
-Assignment inside expressions:
-
+**Solution**:
 ```python
 # Read until empty line
 while (line := input()) != "":
@@ -23,8 +22,15 @@ if (match := pattern.search(text)) is not None:
 results = [y for x in data if (y := expensive(x)) > threshold]
 ```
 
-### Positional-Only Parameters `/`
+**Tip**: The walrus operator `:=` reduces boilerplate when you need both assignment and the value in conditions or comprehensions.
 
+---
+
+## Positional-Only Parameters (3.8+)
+
+**Problem**: You want to prevent callers from using keyword arguments for certain parameters, ensuring API stability.
+
+**Solution**:
 ```python
 def greet(name, /, greeting="Hello"):
     return f"{greeting}, {name}!"
@@ -34,8 +40,15 @@ greet("Alice", "Hi")        # OK
 greet(name="Alice")         # TypeError - name is positional-only
 ```
 
-### Self-Documenting F-Strings
+**Tip**: Use `/` to mark parameters as positional-only, allowing you to rename internal parameters without breaking compatibility.
 
+---
+
+## Self-Documenting F-Strings (3.8+)
+
+**Problem**: You're debugging or logging and want to print variable names along with their values.
+
+**Solution**:
 ```python
 x = 10
 y = 25
@@ -47,12 +60,15 @@ print(f"{user['name']=}")
 # Output: user['name']='Alice'
 ```
 
+**Tip**: The `=` specifier in f-strings shows both the expression and its value, perfect for quick debugging.
+
 ---
 
-## Python 3.9
+## Dict Merge Operators (3.9+)
 
-### Dict Merge Operators `|`
+**Problem**: You need to merge dictionaries or update one dict with another's values.
 
+**Solution**:
 ```python
 defaults = {"host": "localhost", "port": 8080}
 overrides = {"port": 3000, "debug": True}
@@ -65,8 +81,15 @@ config = defaults | overrides
 defaults |= overrides
 ```
 
-### Built-in Generic Types
+**Tip**: Use `|` for merging (creates new dict) and `|=` for in-place updates, replacing the older `{**d1, **d2}` pattern.
 
+---
+
+## Built-in Generic Types (3.9+)
+
+**Problem**: You want type hints without importing from the `typing` module.
+
+**Solution**:
 ```python
 # No more typing.List, typing.Dict imports
 def process(items: list[str]) -> dict[str, int]:
@@ -77,8 +100,15 @@ ids: set[int] = {1, 2, 3}
 pairs: tuple[str, int] = ("age", 25)
 ```
 
-### String `removeprefix` / `removesuffix`
+**Tip**: All built-in collection types now support generic syntax directly, making type hints cleaner and more readable.
 
+---
+
+## String Prefix/Suffix Removal (3.9+)
+
+**Problem**: You need to cleanly remove known prefixes or suffixes from strings.
+
+**Solution**:
 ```python
 filename = "test_user_service.py"
 
@@ -89,12 +119,15 @@ filename.removesuffix(".py")       # "test_user_service"
 # s[len(prefix):] if s.startswith(prefix) else s
 ```
 
+**Tip**: These methods only remove the prefix/suffix if present, otherwise return the original string unchanged.
+
 ---
 
-## Python 3.10
+## Pattern Matching (3.10+)
 
-### Pattern Matching
+**Problem**: You need to match complex data structures and extract values in a clean, readable way.
 
+**Solution**:
 ```python
 def handle(command):
     match command.split():
@@ -122,8 +155,15 @@ match event:
         print(f"Click at {x}, {y}")
 ```
 
-### Union Type Syntax `|`
+**Tip**: Pattern matching is more powerful than `if/elif` chains, supporting destructuring, guards, and type matching in a single construct.
 
+---
+
+## Union Type Syntax (3.10+)
+
+**Problem**: You want cleaner type hints for values that can be multiple types.
+
+**Solution**:
 ```python
 # Instead of Union[int, str]
 def process(value: int | str | None) -> str:
@@ -135,8 +175,15 @@ def process(value: int | str | None) -> str:
 isinstance(x, int | str)  # Same as isinstance(x, (int, str))
 ```
 
-### Parenthesized Context Managers
+**Tip**: The `|` syntax works in both type hints and runtime type checking with `isinstance()`.
 
+---
+
+## Parenthesized Context Managers (3.10+)
+
+**Problem**: You need to use multiple context managers without deeply nested indentation.
+
+**Solution**:
 ```python
 with (
     open("input.txt") as src,
@@ -146,12 +193,15 @@ with (
     dst.write(src.read())
 ```
 
+**Tip**: Parentheses allow you to format multiple context managers cleanly across multiple lines without backslash continuation.
+
 ---
 
-## Python 3.11
+## Exception Groups (3.11+)
 
-### Exception Groups & `except*`
+**Problem**: You need to raise or handle multiple exceptions at once, common in concurrent code.
 
+**Solution**:
 ```python
 # Raise multiple exceptions
 raise ExceptionGroup("errors", [
@@ -168,8 +218,15 @@ except* TypeError as eg:
     print(f"Type errors: {eg.exceptions}")
 ```
 
-### `TaskGroup` for Structured Concurrency
+**Tip**: Use `except*` (not `except`) to handle exception groups. Each handler processes all exceptions of that type.
 
+---
+
+## TaskGroup for Structured Concurrency (3.11+)
+
+**Problem**: You want to run multiple async tasks and ensure all complete or all cancel together on error.
+
+**Solution**:
 ```python
 import asyncio
 
@@ -181,8 +238,15 @@ async def main():
     return task1.result(), task2.result()
 ```
 
-### `tomllib` (TOML Parser)
+**Tip**: TaskGroup provides automatic cancellation of sibling tasks if any task fails, preventing orphaned tasks.
 
+---
+
+## TOML Parser (3.11+)
+
+**Problem**: You need to parse TOML configuration files without external dependencies.
+
+**Solution**:
 ```python
 import tomllib
 
@@ -193,8 +257,15 @@ with open("pyproject.toml", "rb") as f:
 data = tomllib.loads('[section]\nkey = "value"')
 ```
 
-### `Self` Type
+**Tip**: Note that files must be opened in binary mode (`"rb"`). `tomllib` is read-only; use `tomli_w` for writing.
 
+---
+
+## Self Type (3.11+)
+
+**Problem**: You want method return types to correctly refer to the current class, not the parent.
+
+**Solution**:
 ```python
 from typing import Self
 
@@ -207,12 +278,15 @@ class Builder:
         return type(self)()
 ```
 
+**Tip**: `Self` is especially useful for builder patterns and methods that return the instance for chaining.
+
 ---
 
-## Python 3.12
+## Type Parameter Syntax (3.12+)
 
-### Type Parameter Syntax
+**Problem**: You want to write generic functions and classes without the boilerplate of `TypeVar`.
 
+**Solution**:
 ```python
 # Old way
 from typing import TypeVar
@@ -239,8 +313,15 @@ def add[T: (int, float)](a: T, b: T) -> T:
     return a + b
 ```
 
-### Type Alias Statement
+**Tip**: The new bracket syntax is more concise and puts type parameters directly in function/class signatures.
 
+---
+
+## Type Alias Statement (3.12+)
+
+**Problem**: You want to create type aliases that are properly recognized as types, not runtime values.
+
+**Solution**:
 ```python
 # Old way
 from typing import TypeAlias
@@ -252,8 +333,15 @@ type Point = tuple[float, float]
 type Callback[T] = Callable[[T], None]
 ```
 
-### F-String Improvements
+**Tip**: The `type` statement creates proper type aliases that support generic parameters cleanly.
 
+---
+
+## F-String Improvements (3.12+)
+
+**Problem**: You need to use quotes inside f-strings or format complex multiline expressions.
+
+**Solution**:
 ```python
 # Nested quotes (any quote style)
 print(f"User: {user["name"]}")  # Now works!
@@ -271,8 +359,15 @@ result = f"{
 f"{x:=10}"  # This is a format spec, not walrus!
 ```
 
-### `@override` Decorator
+**Tip**: You can now use any quote style inside f-strings without escaping, making JSON and dict access much cleaner.
 
+---
+
+## Override Decorator (3.12+)
+
+**Problem**: You want to catch typos or signature mismatches when overriding parent class methods.
+
+**Solution**:
 ```python
 from typing import override
 
@@ -290,8 +385,15 @@ class Child(Parent):
         return "Oops"
 ```
 
-### `itertools.batched`
+**Tip**: Use `@override` to make type checkers verify that you're actually overriding a parent method, catching typos early.
 
+---
+
+## Batched Iteration (3.12+)
+
+**Problem**: You need to process data in fixed-size chunks.
+
+**Solution**:
 ```python
 from itertools import batched
 
@@ -303,12 +405,15 @@ for batch in batched(large_dataset, 100):
     process_batch(batch)
 ```
 
+**Tip**: `batched()` is more efficient than manual chunking and handles the final partial batch automatically.
+
 ---
 
-## Python 3.13
+## Free-Threaded Python (3.13+)
 
-### Free-Threaded Python (No GIL)
+**Problem**: You need true parallel execution for CPU-bound tasks without multiprocessing overhead.
 
+**Solution**:
 ```python
 # Build/install with: --disable-gil
 # True parallelism for CPU-bound threads
@@ -326,15 +431,15 @@ for t in threads:
     t.join()
 ```
 
-### Improved REPL
+**Tip**: Free-threaded mode must be enabled at build time. It's experimental in 3.13 but enables true CPU parallelism with threads.
 
-- Multiline editing with history
-- Syntax highlighting
-- Better paste support
-- `exit` works (no parentheses needed)
+---
 
-### `copy.replace()`
+## Copy and Replace (3.13+)
 
+**Problem**: You want to create a copy of an object with some fields changed, especially for dataclasses.
+
+**Solution**:
 ```python
 from copy import replace
 from dataclasses import dataclass
@@ -349,8 +454,15 @@ bob = replace(alice, name="Bob")
 # User(name='Bob', age=30)
 ```
 
-### `@deprecated` Decorator
+**Tip**: `replace()` works with any object that has `__replace__()`, including dataclasses, namedtuples, and custom classes.
 
+---
+
+## Deprecated Decorator (3.13+)
+
+**Problem**: You need to mark functions as deprecated with proper warnings.
+
+**Solution**:
 ```python
 from warnings import deprecated
 
@@ -361,12 +473,15 @@ def old_function():
 old_function()  # Emits DeprecationWarning
 ```
 
+**Tip**: The decorator provides a standard way to deprecate APIs, making migration paths clear to users.
+
 ---
 
-## Python 3.14
+## Template Strings (3.14+)
 
-### Template Strings (t-strings)
+**Problem**: You want safe, inspectable string templates that aren't immediately evaluated like f-strings.
 
+**Solution**:
 ```python
 name = "Alice"
 age = 30
@@ -380,8 +495,15 @@ print(template.strings)       # ("Hello ", ", age ", "")
 print(template.interpolations) # (Interpolation(name, ...), ...)
 ```
 
-### Deferred Annotation Evaluation
+**Tip**: t-strings return template objects you can inspect and control, preventing injection attacks in user-provided templates.
 
+---
+
+## Deferred Annotation Evaluation (3.14+)
+
+**Problem**: You need forward references in type hints without quote strings.
+
+**Solution**:
 ```python
 # Forward references work without quotes!
 class Node:
@@ -394,8 +516,15 @@ class Node:
         return node
 ```
 
-### `uuid.uuid7()` (Time-Sortable)
+**Tip**: Annotations are evaluated lazily, so you can reference classes before they're fully defined without string quotes.
 
+---
+
+## Time-Sortable UUIDs (3.14+)
+
+**Problem**: You need UUIDs that maintain chronological order for database efficiency.
+
+**Solution**:
 ```python
 from uuid import uuid7
 
@@ -406,8 +535,15 @@ assert id1 < id2  # Chronologically sortable!
 # Great for database primary keys
 ```
 
-### Pathlib Copy/Move
+**Tip**: UUID v7 includes a timestamp, making them naturally sortable and more database-friendly than UUID v4.
 
+---
+
+## Pathlib Copy and Move (3.14+)
+
+**Problem**: You want to copy or move files using pathlib instead of shutil.
+
+**Solution**:
 ```python
 from pathlib import Path
 
@@ -419,8 +555,15 @@ src.move(Path("archive/file.txt"))
 Path("src/").copy(Path("backup/"), recursive=True)
 ```
 
-### Simplified Exception Syntax
+**Tip**: These methods integrate file operations directly into Path objects, eliminating the need for separate shutil imports.
 
+---
+
+## Simplified Exception Syntax (3.14+)
+
+**Problem**: You want to catch multiple exception types without tuple syntax.
+
+**Solution**:
 ```python
 # Multiple exception types without parentheses
 try:
@@ -428,6 +571,8 @@ try:
 except ValueError, TypeError, KeyError:  # No tuple needed!
     handle_error()
 ```
+
+**Tip**: The comma-separated syntax matches the consistency of other Python syntax and reduces visual clutter.
 
 ---
 

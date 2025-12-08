@@ -200,8 +200,9 @@ my-project/
 
 ## References
 
-- [patterns.md](patterns.md) - Functional patterns & composition
-- [async.md](async.md) - Async/await deep dive
-- [testing.md](testing.md) - pytest patterns & fixtures
-- [design-patterns.md](design-patterns.md) - Builder, DI, Factory, Strategy, Repository
-- [modern.md](modern.md) - Python 3.8–3.14 key features
+- [reference.md](reference.md) - Data structures, best practices, idioms, error handling
+- [patterns.md](cookbook/patterns.md) - Functional patterns & composition
+- [async.md](cookbook/async.md) - Async/await deep dive
+- [testing.md](cookbook/testing.md) - pytest patterns & fixtures
+- [design-patterns.md](cookbook/design-patterns.md) - Builder, DI, Factory, Strategy, Repository
+- [modern.md](cookbook/modern.md) - Python 3.8–3.14 key features

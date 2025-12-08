@@ -1,9 +1,14 @@
-# Functional Patterns & Data Structures
+# Functional Patterns & Data Structures Cookbook
 
-## Data Structures
+Essential patterns for working with Clojure's data structures, sequences, and functional programming idioms.
 
-### Choosing the Right Collection
+---
 
+## Choosing the Right Collection
+
+**Problem**: You need to select the appropriate data structure for your use case.
+
+**Solution**:
 ```clojure
 ;; Vectors: indexed access, append at end
 (def users ["Alice" "Bob" "Charlie"])
@@ -27,8 +32,15 @@
 (tags "clojure")           ; => "clojure" (set as fn)
 ```
 
-### Collection Operations
+**Tip**: Use vectors for indexed access, lists for sequential processing, maps for lookups, and sets for membership testing.
 
+---
+
+## Basic Collection Operations
+
+**Problem**: You need to add, remove, or combine collection elements.
+
+**Solution**:
 ```clojure
 ;; Adding
 (conj [1 2] 3)           ; => [1 2 3]
@@ -51,8 +63,15 @@
 (reduce + [1 2 3 4])     ; => 10
 ```
 
-### Keywords as Functions
+**Tip**: Use `conj` for collection-appropriate addition, `assoc` for maps, and `merge-with` for merging maps with conflict resolution.
 
+---
+
+## Keywords as Functions
+
+**Problem**: You need to extract values from maps or use sets as filters.
+
+**Solution**:
 ```clojure
 ;; Keywords extract from maps
 (:name {:name "Alice" :age 30}) ; => "Alice"
@@ -64,10 +83,15 @@
 (remove #{:skip :ignore} items)
 ```
 
-## Sequence Operations
+**Tip**: Keywords and sets implement IFn, making them excellent for map extraction and filtering operations.
 
-### Core Transformations
+---
 
+## Core Sequence Transformations
+
+**Problem**: You need to transform, filter, or reduce sequences.
+
+**Solution**:
 ```clojure
 ;; map: transform each element
 (map inc [1 2 3])          ; => (2 3 4)
@@ -90,8 +114,15 @@
 (take-while pos? [2 1 0 -1]) ; => (2 1)
 ```
 
-### Grouping & Partitioning
+**Tip**: Use `map` for element-wise transforms, `filter` for selection, `reduce` for aggregation, and `take`/`drop` for subsequences.
 
+---
+
+## Grouping and Partitioning
+
+**Problem**: You need to organize sequences into groups or chunks.
+
+**Solution**:
 ```clojure
 ;; group-by: map of key -> items
 (group-by :type [{:type :a :n 1} {:type :b :n 2} {:type :a :n 3}])
@@ -108,8 +139,15 @@
 ; => ((1 3) (2 4) (5))
 ```
 
-### Finding & Testing
+**Tip**: Use `group-by` to categorize items by a key function, `partition` for fixed-size chunks, and `partition-by` to split when a function's return value changes.
 
+---
+
+## Finding and Testing Elements
+
+**Problem**: You need to check if elements exist or meet certain conditions.
+
+**Solution**:
 ```clojure
 ;; some: find first truthy
 (some even? [1 3 5 6])       ; => true
@@ -124,10 +162,15 @@
 (not-any? even? [1 3 5])     ; => true
 ```
 
-## Lazy Sequences
+**Tip**: `some` returns the first truthy result, not just true/false. Combine with sets or predicates for flexible searching.
 
-### Creating Lazy Seqs
+---
 
+## Creating Lazy Sequences
+
+**Problem**: You need to work with infinite or large sequences without realizing them all at once.
+
+**Solution**:
 ```clojure
 ;; range: lazy infinite or bounded
 (range)           ; infinite: 0, 1, 2, ...
@@ -149,8 +192,15 @@
 (take 10 (fibs)) ; => (0 1 1 2 3 5 8 13 21 34)
 ```
 
-### Realizing Lazy Seqs
+**Tip**: Lazy sequences are only computed when needed. Always use `take` or similar to limit infinite sequences.
 
+---
+
+## Realizing Lazy Sequences
+
+**Problem**: You need to force evaluation of a lazy sequence for side effects or to cache results.
+
+**Solution**:
 ```clojure
 ;; Force evaluation
 (doall (map println [1 2 3])) ; Realizes, returns seq
@@ -162,10 +212,15 @@
 ;; Most lazy seqs are chunked for performance
 ```
 
-## Transducers
+**Tip**: Use `doall` when you need the sequence back, `dorun` for side effects only, and `vec`/`into` to convert to concrete collections.
 
-### Composable Transformations
+---
 
+## Composable Transducers
+
+**Problem**: You want to compose transformations that work across different contexts without intermediate collections.
+
+**Solution**:
 ```clojure
 ;; Transducers separate transformation from data source
 (def xf
@@ -184,8 +239,15 @@
 (def ch (a/chan 10 xf))
 ```
 
-### Common Transducers
+**Tip**: Transducers eliminate intermediate sequences and work with collections, channels, and reducers. Compose with `comp`.
 
+---
+
+## Common Transducer Operations
+
+**Problem**: You need to know which sequence operations are available as transducers.
+
+**Solution**:
 ```clojure
 (map f)           ; Transform
 (filter pred)     ; Keep matching
@@ -201,8 +263,15 @@
 (mapcat f)        ; map + flatten
 ```
 
-### Reducers (Parallel)
+**Tip**: Most core sequence functions have transducer arities when called with just their parameters (no collection).
 
+---
+
+## Parallel Reducers
+
+**Problem**: You need to process large collections in parallel.
+
+**Solution**:
 ```clojure
 (require '[clojure.core.reducers :as r])
 
@@ -218,8 +287,15 @@
   large-coll)
 ```
 
+**Tip**: Reducers use Java's fork/join for parallel processing. Only beneficial for large collections due to overhead.
+
+---
+
 ## For Comprehensions
 
+**Problem**: You need to generate sequences with nested iteration, filtering, and bindings.
+
+**Solution**:
 ```clojure
 ;; List comprehension
 (for [x [1 2 3]
@@ -247,10 +323,15 @@
 ; => (0 1 2 3 4)
 ```
 
-## Map Operations
+**Tip**: Use `:when` for filtering, `:let` for intermediate bindings, and `:while` for early termination. `for` is lazy.
 
-### Transforming Maps
+---
 
+## Transforming Maps
+
+**Problem**: You need to update keys or values across an entire map.
+
+**Solution**:
 ```clojure
 ;; Update values
 (update-vals {:a 1 :b 2} inc)     ; => {:a 2 :b 3}
@@ -267,8 +348,15 @@
     maps))
 ```
 
-### Map Iteration
+**Tip**: Use `update-vals` and `update-keys` for bulk transformations, `select-keys` for projection, and custom merge functions for nested structures.
 
+---
+
+## Efficient Map Iteration
+
+**Problem**: You need to iterate over map entries efficiently.
+
+**Solution**:
 ```clojure
 ;; Iterate entries
 (for [[k v] {:a 1 :b 2}]
@@ -283,8 +371,15 @@
 ; => {:a 2 :b 3}
 ```
 
-## Zippers (Tree Navigation)
+**Tip**: `reduce-kv` is more efficient than destructuring with `reduce` or `for` when working with maps, as it avoids creating MapEntry objects.
 
+---
+
+## Tree Navigation with Zippers
+
+**Problem**: You need to navigate and edit nested tree structures functionally.
+
+**Solution**:
 ```clojure
 (require '[clojure.zip :as z])
 
@@ -302,3 +397,7 @@
     z/root)
 ; => [1 [:new] [4 [5 6]]]
 ```
+
+**Tip**: Zippers provide a functional way to navigate and edit trees. Use `z/root` to get the modified tree back after edits.
+
+---
