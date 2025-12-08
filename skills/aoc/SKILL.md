@@ -41,7 +41,7 @@ Parse once. Solve both parts. Test each function independently.
 | "Count ways..." / "Min/max..." | Dynamic programming |
 | Connected regions | Flood fill |
 
-**Deep dive**: See [algorithms.md](algorithms.md)
+**Deep dive**: See [algorithms.md](cookbook/algorithms.md)
 
 ## Input Patterns
 
@@ -56,7 +56,7 @@ Parse once. Solve both parts. Test each function independently.
 **Grids**: Use `(row, col)` with row↓. Sparse dict for infinite/sparse grids.
 **Directions**: `UP=(-1,0), DOWN=(1,0), LEFT=(0,-1), RIGHT=(0,1)`
 
-**Deep dive**: See [parsing.md](parsing.md)
+**Deep dive**: See [parsing.md](cookbook/parsing.md)
 
 ## Part 2 Patterns
 
@@ -86,6 +86,6 @@ Parse once. Solve both parts. Test each function independently.
 
 ## References
 
-- [algorithms.md](algorithms.md) - Graph traversal, DP, cycle detection, search
-- [parsing.md](parsing.md) - Input formats, grids, coordinates, hex grids
+- [algorithms.md](cookbook/algorithms.md) - Graph traversal, DP, cycle detection, search
+- [parsing.md](cookbook/parsing.md) - Input formats, grids, coordinates, hex grids
 - [reference.md](reference.md) - Data structures, optimization, anti-patterns
