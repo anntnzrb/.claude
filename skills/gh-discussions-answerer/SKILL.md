@@ -27,9 +27,9 @@ Search for unanswered discussions via GitHub API:
 Task(subagent_type="general-purpose", model="haiku", prompt="
 Run these searches to find unanswered discussions. Calculate dates from today.
 
-SEARCH 1 - Last 30 days, Q&A with low interaction:
+SEARCH 1 - Last 30 days, Q&A with no replies:
 gh api graphql -f query='{
-  search(query: \"is:open comments:<2 created:>YYYY-MM-DD category:Q&A NOT author:bot\", type: DISCUSSION, first: 100) {
+  search(query: \"is:open comments:0 created:>YYYY-MM-DD category:Q&A NOT author:bot\", type: DISCUSSION, first: 100) {
     nodes { ... on Discussion { title number url bodyText repository { nameWithOwner } category { name } } }
   }
 }'
