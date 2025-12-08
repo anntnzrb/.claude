@@ -68,15 +68,43 @@ export const providers = {
     tokenValidator: createTokenValidator("MiniMax M2 mode", "MINIMAX_API_KEY"),
     env: {} as EnvironmentConfig,
   },
+  chutes: {
+    name: "Chutes mode",
+    baseUrl: "https://claude.chutes.ai",
+    haikuModel: "deepseek-ai/DeepSeek-V3.2",
+    sonnetModel: "deepseek-ai/DeepSeek-V3.2",
+    opusModel: "deepseek-ai/DeepSeek-V3.2",
+    apiKeyEnvVar: "CHUTES_API_KEY",
+    tokenValidator: createTokenValidator("Chutes mode", "CHUTES_API_KEY"),
+    env: {} as EnvironmentConfig,
+  },
 };
 
 // Initialize env for each provider
 providers.glm.env = createProviderEnv(providers.glm);
 providers.minimax.env = createProviderEnv(providers.minimax);
+providers.chutes.env = {
+  ...createProviderEnv(providers.chutes),
+  API_TIMEOUT_MS: "6000000", // Extended timeout for Chutes (100 min)
+};
+
+/**
+ * Create Chutes environment with a custom model
+ * @param model - Model identifier to use for all tiers
+ */
+export const createChutesEnvWithModel = (model: string): EnvironmentConfig => ({
+  ANTHROPIC_BASE_URL: providers.chutes.baseUrl,
+  API_TIMEOUT_MS: "6000000",
+  ANTHROPIC_DEFAULT_HAIKU_MODEL: model,
+  ANTHROPIC_DEFAULT_SONNET_MODEL: model,
+  ANTHROPIC_DEFAULT_OPUS_MODEL: model,
+});
 
 // Export named exports for backwards compatibility
 export const glmEnv = providers.glm.env;
 export const minimaxEnv = providers.minimax.env;
+export const chutesEnv = providers.chutes.env;
 
 export const validateZaiToken = providers.glm.tokenValidator;
 export const validateMiniMaxToken = providers.minimax.tokenValidator;
+export const validateChutesToken = providers.chutes.tokenValidator;

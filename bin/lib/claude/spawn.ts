@@ -6,7 +6,12 @@ import { safeRead } from "../shared/fs.ts";
 import { safeJsonRead } from "../shared/json.ts";
 import type { EnvironmentConfig, McpServer } from "./types.ts";
 import { claudeCmd } from "./config/env.ts";
-import { glmEnv, minimaxEnv } from "./config/providers.ts";
+import {
+  glmEnv,
+  minimaxEnv,
+  chutesEnv,
+  createChutesEnvWithModel,
+} from "./config/providers.ts";
 import { paths } from "./config/paths.ts";
 import { buildMcpServers } from "./config/mcp.ts";
 
@@ -23,21 +28,32 @@ const conditional = (condition: boolean, env: object): object =>
  * Create environment object with Claude variables and development flags
  * @param isGlmMode - Whether GLM mode is enabled
  * @param isMiniMaxMode - Whether MiniMax M2 mode is enabled
+ * @param isChutesMode - Whether Chutes mode is enabled
+ * @param chutesModel - Optional custom model for Chutes mode
  * @returns Environment object for Claude Code execution
  */
 export const setupEnv = (
   isGlmMode = false,
   isMiniMaxMode = false,
+  isChutesMode = false,
+  chutesModel?: string,
 ): EnvironmentConfig => ({
   ...process.env,
   ...conditional(isGlmMode, glmEnv),
   ...conditional(isMiniMaxMode, minimaxEnv),
+  ...conditional(
+    isChutesMode,
+    chutesModel ? createChutesEnvWithModel(chutesModel) : chutesEnv,
+  ),
   // Map provider-specific API keys to ANTHROPIC_AUTH_TOKEN
   ...conditional(isGlmMode && process.env.ZAI_API_KEY, {
     ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY,
   }),
   ...conditional(isMiniMaxMode && process.env.MINIMAX_API_KEY, {
     ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY,
+  }),
+  ...conditional(isChutesMode && process.env.CHUTES_API_KEY, {
+    ANTHROPIC_AUTH_TOKEN: process.env.CHUTES_API_KEY,
   }),
 });
 
@@ -47,6 +63,7 @@ export const setupEnv = (
  * @param env - Environment configuration
  * @param isGlmMode - Whether GLM mode is enabled
  * @param isMiniMaxMode - Whether MiniMax M2 mode is enabled
+ * @param isChutesMode - Whether Chutes mode is enabled
  * @returns Spawned Claude process
  */
 export const spawnClaude = async (
@@ -54,6 +71,7 @@ export const spawnClaude = async (
   env: EnvironmentConfig,
   isGlmMode = false,
   isMiniMaxMode = false,
+  isChutesMode = false,
 ): Promise<Subprocess> => {
   const mcpResult = await safeJsonRead<McpServer[]>(paths.mcp);
   const mcpArray = Array.isArray(mcpResult) ? mcpResult : [];

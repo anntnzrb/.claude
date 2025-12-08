@@ -19,6 +19,7 @@ import { setupEnv, spawnClaude } from "./spawn.ts";
 import {
   validateZaiToken as validateGlmToken,
   validateMiniMaxToken,
+  validateChutesToken,
 } from "./config/providers.ts";
 
 /**
@@ -61,10 +62,30 @@ const main = async () => {
     }
   }
 
+  // Check for --chutes flag and validate if present
+  const chutesIndex = args.indexOf("--chutes");
+  const isChutesMode = chutesIndex !== -1;
+  let chutesModel: string | undefined;
+
+  if (isChutesMode) {
+    // Remove --chutes from args before passing to Claude
+    args.splice(chutesIndex, 1);
+    // Validate CHUTES_API_KEY for Chutes mode
+    validateChutesToken();
+
+    // Check for --model flag (only valid with --chutes)
+    const modelIndex = args.indexOf("--model");
+    if (modelIndex !== -1 && args[modelIndex + 1]) {
+      chutesModel = args[modelIndex + 1];
+      // Remove --model and its value from args
+      args.splice(modelIndex, 2);
+    }
+  }
+
   await mergeConfigs();
   await createAndSaveSymlinks(cwd);
-  const env = setupEnv(isGlmMode, isMiniMaxMode);
-  const proc = await spawnClaude(args, env, isGlmMode, isMiniMaxMode);
+  const env = setupEnv(isGlmMode, isMiniMaxMode, isChutesMode, chutesModel);
+  const proc = await spawnClaude(args, env, isGlmMode, isMiniMaxMode, isChutesMode);
   await proc.exited;
   await cleanup();
   process.exit(0);
