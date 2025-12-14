@@ -62,6 +62,7 @@
     ],
     "defaultMode": "bypassPermissions"
   },
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/bin/lib/statusline.ts"
