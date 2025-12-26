@@ -78,6 +78,16 @@ export const providers = {
     tokenValidator: createTokenValidator("Chutes mode", "CHUTES_API_KEY"),
     env: {} as EnvironmentConfig,
   },
+  openrouter: {
+    name: "OpenRouter mode",
+    baseUrl: "https://openrouter.ai/api",
+    haikuModel: "minimax/minimax-m2.1",
+    sonnetModel: "minimax/minimax-m2.1",
+    opusModel: "minimax/minimax-m2.1",
+    apiKeyEnvVar: "OPENROUTER_API_KEY",
+    tokenValidator: createTokenValidator("OpenRouter mode", "OPENROUTER_API_KEY"),
+    env: {} as EnvironmentConfig,
+  },
 };
 
 // Initialize env for each provider
@@ -87,24 +97,25 @@ providers.chutes.env = {
   ...createProviderEnv(providers.chutes),
   API_TIMEOUT_MS: "6000000", // Extended timeout for Chutes (100 min)
 };
+providers.openrouter.env = {
+  ...createProviderEnv(providers.openrouter),
+  ANTHROPIC_API_KEY: "", // Must be explicitly empty to prevent conflicts
+};
 
-/**
- * Create Chutes environment with a custom model
- * @param model - Model identifier to use for all tiers
- */
-export const createChutesEnvWithModel = (model: string): EnvironmentConfig => ({
-  ANTHROPIC_BASE_URL: providers.chutes.baseUrl,
-  API_TIMEOUT_MS: "6000000",
+export const createProviderEnvWithModel = (
+  provider: keyof typeof providers,
+  model: string,
+  extraConfig: EnvironmentConfig = {},
+): EnvironmentConfig => ({
+  ANTHROPIC_BASE_URL: providers[provider].baseUrl,
+  API_TIMEOUT_MS: "3000000",
+  ...extraConfig,
   ANTHROPIC_DEFAULT_HAIKU_MODEL: model,
   ANTHROPIC_DEFAULT_SONNET_MODEL: model,
   ANTHROPIC_DEFAULT_OPUS_MODEL: model,
 });
 
-// Export named exports for backwards compatibility
-export const glmEnv = providers.glm.env;
-export const minimaxEnv = providers.minimax.env;
-export const chutesEnv = providers.chutes.env;
-
 export const validateZaiToken = providers.glm.tokenValidator;
 export const validateMiniMaxToken = providers.minimax.tokenValidator;
 export const validateChutesToken = providers.chutes.tokenValidator;
+export const validateOpenRouterToken = providers.openrouter.tokenValidator;

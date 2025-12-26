@@ -2,76 +2,58 @@
  * Claude Code process spawning
  */
 
-import { safeRead } from "../shared/fs.ts";
 import { safeJsonRead } from "../shared/json.ts";
-import type { EnvironmentConfig, McpServer } from "./types.ts";
+import type { EnvironmentConfig, McpServer, ProviderModes } from "./types.ts";
 import { claudeCmd } from "./config/env.ts";
-import {
-  glmEnv,
-  minimaxEnv,
-  chutesEnv,
-  createChutesEnvWithModel,
-} from "./config/providers.ts";
+import { providers, createProviderEnvWithModel } from "./config/providers.ts";
 import { paths } from "./config/paths.ts";
 import { buildMcpServers } from "./config/mcp.ts";
 
-/**
- * Conditionally spread an object if condition is true
- * @param condition - Boolean condition to check
- * @param env - Object to spread if condition is true
- * @returns Object if condition is true, empty object otherwise
- */
-const conditional = (condition: boolean, env: object): object =>
-  condition ? env : {};
+type ProviderKey = keyof typeof providers;
 
 /**
  * Create environment object with Claude variables and development flags
- * @param isGlmMode - Whether GLM mode is enabled
- * @param isMiniMaxMode - Whether MiniMax M2 mode is enabled
- * @param isChutesMode - Whether Chutes mode is enabled
- * @param chutesModel - Optional custom model for Chutes mode
+ * @param modes - Object mapping provider keys to their custom models (if any)
  * @returns Environment object for Claude Code execution
  */
-export const setupEnv = (
-  isGlmMode = false,
-  isMiniMaxMode = false,
-  isChutesMode = false,
-  chutesModel?: string,
-): EnvironmentConfig => ({
-  ...process.env,
-  ...conditional(isGlmMode, glmEnv),
-  ...conditional(isMiniMaxMode, minimaxEnv),
-  ...conditional(
-    isChutesMode,
-    chutesModel ? createChutesEnvWithModel(chutesModel) : chutesEnv,
-  ),
+export const setupEnv = (modes: ProviderModes = {}): EnvironmentConfig => {
+  const env: EnvironmentConfig = { ...process.env };
+
+  for (const [key, model] of Object.entries(modes)) {
+    const provider = key as ProviderKey;
+    if (model) {
+      const extraConfig: EnvironmentConfig =
+        provider === "chutes"
+          ? { API_TIMEOUT_MS: "6000000" }
+          : provider === "openrouter"
+            ? { ANTHROPIC_API_KEY: "" }
+            : {};
+      Object.assign(env, createProviderEnvWithModel(provider, model, extraConfig));
+    } else {
+      Object.assign(env, providers[provider].env);
+    }
+  }
+
   // Map provider-specific API keys to ANTHROPIC_AUTH_TOKEN
-  ...conditional(isGlmMode && process.env.ZAI_API_KEY, {
-    ANTHROPIC_AUTH_TOKEN: process.env.ZAI_API_KEY,
-  }),
-  ...conditional(isMiniMaxMode && process.env.MINIMAX_API_KEY, {
-    ANTHROPIC_AUTH_TOKEN: process.env.MINIMAX_API_KEY,
-  }),
-  ...conditional(isChutesMode && process.env.CHUTES_API_KEY, {
-    ANTHROPIC_AUTH_TOKEN: process.env.CHUTES_API_KEY,
-  }),
-});
+  for (const [key, provider] of Object.entries(providers)) {
+    if (modes[key as ProviderKey] !== undefined && process.env[provider.apiKeyEnvVar]) {
+      env.ANTHROPIC_AUTH_TOKEN = process.env[provider.apiKeyEnvVar]!;
+      break;
+    }
+  }
+
+  return env;
+};
 
 /**
  * Spawn Claude with provided arguments
  * @param args - Command line arguments to pass to Claude Code
  * @param env - Environment configuration
- * @param isGlmMode - Whether GLM mode is enabled
- * @param isMiniMaxMode - Whether MiniMax M2 mode is enabled
- * @param isChutesMode - Whether Chutes mode is enabled
  * @returns Spawned Claude process
  */
 export const spawnClaude = async (
   args: string[],
   env: EnvironmentConfig,
-  isGlmMode = false,
-  isMiniMaxMode = false,
-  isChutesMode = false,
 ): Promise<Subprocess> => {
   const mcpResult = await safeJsonRead<McpServer[]>(paths.mcp);
   const mcpArray = Array.isArray(mcpResult) ? mcpResult : [];

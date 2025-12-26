@@ -20,7 +20,9 @@ import {
   validateZaiToken as validateGlmToken,
   validateMiniMaxToken,
   validateChutesToken,
+  validateOpenRouterToken,
 } from "./config/providers.ts";
+import type { ProviderModes } from "./types.ts";
 
 /**
  * Cleanup all resources after Claude session ends
@@ -29,6 +31,32 @@ import {
 const cleanup = (): Promise<void> =>
   Promise.all([cleanupAgentsSymlinks()]).then(() => {});
 
+const parseProviderFlag = (
+  args: string[],
+  flag: string,
+  validator: () => void,
+  modelFlag?: string,
+): { isMode: boolean; model?: string } => {
+  const index = args.indexOf(flag);
+  if (index === -1) return { isMode: false };
+
+  args.splice(index, 1);
+  validator();
+
+  if (modelFlag) {
+    const modelIndex = args.indexOf(modelFlag);
+    if (modelIndex !== -1) {
+      const nextArg = args[modelIndex + 1];
+      if (nextArg && !nextArg.startsWith("--")) {
+        args.splice(modelIndex, 2);
+        return { isMode: true, model: nextArg };
+      }
+    }
+  }
+
+  return { isMode: true };
+};
+
 /**
  * Main execution flow
  */
@@ -36,56 +64,30 @@ const main = async () => {
   const [, , ...args] = process.argv;
   const cwd = process.cwd();
 
-  // Check for --glm flag and validate if present
-  const glmIndex = args.indexOf("--glm");
-  const isGlmMode = glmIndex !== -1;
-
-  // Check for --m2 flag and validate if present
-  const m2Index = args.indexOf("--m2");
-  const isMiniMaxMode = m2Index !== -1;
-
-  if (isGlmMode) {
-    // Remove --glm from args before passing to Claude
-    args.splice(glmIndex, 1);
-    // Validate ZAI_API_KEY for GLM mode
-    validateGlmToken();
-  }
-
-  if (isMiniMaxMode) {
-    // Recalculate index after potential removal of --glm flag
-    const updatedM2Index = args.indexOf("--m2");
-    if (updatedM2Index !== -1) {
-      // Remove --m2 from args before passing to Claude
-      args.splice(updatedM2Index, 1);
-      // Validate MINIMAX_API_KEY for MiniMax mode
-      validateMiniMaxToken();
-    }
-  }
-
-  // Check for --chutes flag and validate if present
-  const chutesIndex = args.indexOf("--chutes");
-  const isChutesMode = chutesIndex !== -1;
-  let chutesModel: string | undefined;
-
-  if (isChutesMode) {
-    // Remove --chutes from args before passing to Claude
-    args.splice(chutesIndex, 1);
-    // Validate CHUTES_API_KEY for Chutes mode
-    validateChutesToken();
-
-    // Check for --model flag (only valid with --chutes)
-    const modelIndex = args.indexOf("--model");
-    if (modelIndex !== -1 && args[modelIndex + 1]) {
-      chutesModel = args[modelIndex + 1];
-      // Remove --model and its value from args
-      args.splice(modelIndex, 2);
-    }
-  }
+  const { isMode: isGlmMode } = parseProviderFlag(args, "--glm", validateGlmToken);
+  const { isMode: isMiniMaxMode } = parseProviderFlag(args, "--m2", validateMiniMaxToken);
+  const { isMode: isChutesMode, model: chutesModel } = parseProviderFlag(
+    args,
+    "--chutes",
+    validateChutesToken,
+    "--chutes-model",
+  );
+  const { isMode: isOpenRouterMode, model: openrouterModel } = parseProviderFlag(
+    args,
+    "--openrouter",
+    validateOpenRouterToken,
+    "--openrouter-model",
+  );
 
   await mergeConfigs();
   await createAndSaveSymlinks(cwd);
-  const env = setupEnv(isGlmMode, isMiniMaxMode, isChutesMode, chutesModel);
-  const proc = await spawnClaude(args, env, isGlmMode, isMiniMaxMode, isChutesMode);
+  const modes: ProviderModes = {};
+  if (isGlmMode) modes.glm = "";
+  if (isMiniMaxMode) modes.minimax = "";
+  if (isChutesMode) modes.chutes = chutesModel ?? "";
+  if (isOpenRouterMode) modes.openrouter = openrouterModel ?? "";
+  const env = setupEnv(modes);
+  const proc = await spawnClaude(args, env);
   await proc.exited;
   await cleanup();
   process.exit(0);

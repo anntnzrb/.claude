@@ -7,6 +7,13 @@
  */
 export type EnvironmentConfig = Record<string, string | number>;
 
+export type ProviderModes = {
+  glm?: string;
+  minimax?: string;
+  chutes?: string;
+  openrouter?: string;
+};
+
 /**
  * MCP server configuration with connection details
  */
